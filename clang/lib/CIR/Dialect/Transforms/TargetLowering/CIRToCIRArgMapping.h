@@ -107,7 +107,6 @@ public:
       case ::cir::ABIArgInfo::IndirectAliased:
         IRArgs.NumberOfArgs = 1;
         break;
-
       default:
         cir_cconv_unreachable("Missing ABIArgInfo::Kind");
       }

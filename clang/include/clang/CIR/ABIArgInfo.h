@@ -100,10 +100,10 @@ private:
     unsigned AllocaFieldIndex;     // isInAlloca()
   };
   Kind TheKind;
-  bool InReg : 1;          // isDirect() || isExtend() || isIndirect()
-  bool CanBeFlattened : 1; // isDirect()
-  bool SignExt : 1;        // isExtend()
-  bool IndirectByVal : 1;  // isIndirect()
+  bool InReg : 1;           // isDirect() || isExtend() || isIndirect()
+  bool CanBeFlattened : 1;  // isDirect()
+  bool SignExt : 1;         // isExtend()
+  bool IndirectByVal : 1;   // isIndirect()
   bool IndirectRealign : 1; // isIndirect()
   bool SRetAfterThis : 1;   // isIndirect()
 

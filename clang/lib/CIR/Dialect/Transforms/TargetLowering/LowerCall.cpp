@@ -160,6 +160,8 @@ void LowerModule::constructAttributeList(StringRef Name,
   case ABIArgInfo::Indirect:
     cir_cconv_assert(!::cir::MissingFeatures::ABIPotentialArgAccess());
     break;
+  case ABIArgInfo::Indirect:
+    break;
   default:
     cir_cconv_unreachable("Missing ABIArgInfo::Kind");
   }
@@ -225,6 +227,9 @@ void LowerModule::constructAttributeList(StringRef Name,
         cir_cconv_unreachable("InReg attribute is NYI");
       // Attrs.addStackAlignmentAttr(llvm::MaybeAlign(AI.getDirectAlign()));
       cir_cconv_assert(!::cir::MissingFeatures::noFPClass());
+      break;
+    case ABIArgInfo::Indirect:
+      // TODO: add attributes
       break;
     default:
       cir_cconv_unreachable("Missing ABIArgInfo::Kind");

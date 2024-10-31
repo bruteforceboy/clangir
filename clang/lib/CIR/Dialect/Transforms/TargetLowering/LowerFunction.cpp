@@ -524,6 +524,32 @@ LowerFunction::buildFunctionProlog(const LowerFunctionInfo &FI, FuncOp Fn,
       rewriter.eraseOp(argAlloca.getDefiningOp());
       break;
     }
+    case ABIArgInfo::Indirect: {
+      auto AI = Fn.getArgument(FirstIRArg);
+      auto ptrTy = rewriter.getType<PointerType>(Arg.getType());
+      ArgVals.push_back(AI);
+
+      Value arg = SrcFn.getArgument(ArgNo);
+      cir_cconv_assert(arg.hasOneUse());
+      auto *firstStore = *arg.user_begin();
+      auto argAlloca = cast<StoreOp>(firstStore).getAddr();
+
+      rewriter.setInsertionPoint(argAlloca.getDefiningOp());
+      auto newAlloca = rewriter.create<AllocaOp>(
+          Fn.getLoc(), rewriter.getType<PointerType>(ptrTy), ptrTy,
+          /*name=*/StringRef(""),
+          /*alignment=*/rewriter.getI64IntegerAttr(8));
+
+      rewriter.create<StoreOp>(newAlloca.getLoc(), AI, newAlloca.getResult());
+      auto load =
+          rewriter.create<LoadOp>(newAlloca.getLoc(), newAlloca.getResult());
+
+      rewriter.replaceAllUsesWith(argAlloca, load);
+      rewriter.eraseOp(firstStore);
+      rewriter.eraseOp(argAlloca.getDefiningOp());
+
+      break;
+    }
     default:
       cir_cconv_unreachable("Unhandled ABIArgInfo::Kind");
     }
@@ -544,9 +570,9 @@ mlir::cir::AllocaOp findAlloca(Operation *op) {
   if (!op)
     return {};
 
-  if (auto al = dyn_cast<mlir::cir::AllocaOp>(op)) {
+  if (auto al = dyn_cast<mlir::cir::AllocaOp>(op))
     return al;
-  } else if (auto ret = dyn_cast<mlir::cir::ReturnOp>(op)) {
+  if (auto ret = dyn_cast<mlir::cir::ReturnOp>(op)) {
     auto vals = ret.getInput();
     if (vals.size() == 1)
       return findAlloca(vals[0].getDefiningOp());
@@ -584,7 +610,14 @@ LogicalResult LowerFunction::buildFunctionEpilog(const LowerFunctionInfo &FI) {
         if (auto al = findAlloca(ret)) {
           rewriter.replaceAllUsesWith(al.getResult(), RVAddr);
           rewriter.eraseOp(al);
+          rewriter.setInsertionPoint(ret);
           rewriter.replaceOpWithNewOp<ReturnOp>(ret);
+
+          auto vals = ret.getInput();
+          if (vals.size() == 1)
+            if (auto Load = dyn_cast<LoadOp>(vals[0].getDefiningOp()))
+              if (Load.getResult().use_empty())
+                rewriter.eraseOp(Load);
         }
       });
     }
@@ -663,12 +696,12 @@ LogicalResult LowerFunction::generateCode(FuncOp oldFn, FuncOp newFn,
   Block *dstBlock = &newFn.getBody().front();
 
   // Ensure both blocks have the same number of arguments in order to
-  // safely merge them.
+  // safely merge them
   CIRToCIRArgMapping IRFunctionArgs(LM.getContext(), FnInfo, true);
   if (IRFunctionArgs.hasSRetArg()) {
-    auto dstIndex = IRFunctionArgs.getSRetArgNo();
-    auto retArg = dstBlock->getArguments()[dstIndex];
-    srcBlock->insertArgument(dstIndex, retArg.getType(), retArg.getLoc());
+    auto dst_index = IRFunctionArgs.getSRetArgNo();
+    auto ret_arg = dstBlock->getArguments()[dst_index];
+    srcBlock->insertArgument(dst_index, ret_arg.getType(), ret_arg.getLoc());
   }
 
   // Migrate function body to new ABI-aware function.
@@ -828,6 +861,26 @@ Value LowerFunction::rewriteCallOp(FuncType calleeTy, FuncOp origCallee,
   return CallResult;
 }
 
+Value createAlloca(Location loc, Type type, IntegerAttr alignment,
+                   LowerFunction &CGF) {
+  return CGF.getRewriter().create<AllocaOp>(
+      loc, CGF.getRewriter().getType<PointerType>(type), type,
+      /*name=*/StringRef(""), alignment);
+}
+
+Value getAllocaVal(Value Src, LowerFunction &CGF) {
+  if (auto Load = dyn_cast<LoadOp>(Src.getDefiningOp())) {
+    if (auto Alloca = dyn_cast<AllocaOp>(Load.getAddr().getDefiningOp())) {
+      auto &bld = CGF.getRewriter();
+      bld.replaceAllOpUsesWith(Load, Alloca);
+      bld.eraseOp(Load);
+      return Alloca;
+    }
+  }
+
+  return {};
+}
+
 // NOTE(cir): This method has partial parity to CodeGenFunction's EmitCall
 // method in CGCall.cpp. When incrementing it, use the original codegen as a
 // reference: add ABI-specific stuff and skip codegen stuff.
@@ -859,11 +912,13 @@ Value LowerFunction::rewriteCallOp(const LowerFunctionInfo &CallInfo,
   CIRToCIRArgMapping IRFunctionArgs(LM.getContext(), CallInfo);
   SmallVector<Value, 16> IRCallArgs(IRFunctionArgs.totalIRArgs());
 
+  Value SRetPtr;
   // If the call returns a temporary with struct return, create a temporary
   // alloca to hold the result, unless one is given to us.
   if (RetAI.isIndirect() || RetAI.isCoerceAndExpand() || RetAI.isInAlloca()) {
-    SRetPtr = createAlloca(loc, RetTy,
-                           /*alignment=*/rewriter.getI64IntegerAttr(4), *this);
+    auto alignment =
+        IntegerAttr::get(mlir::IntegerType::get(rewriter.getContext(), 64), 8);
+    SRetPtr = createAlloca(loc, RetTy, alignment, *this);
     IRCallArgs[IRFunctionArgs.getSRetArgNo()] = SRetPtr;
   }
 
@@ -889,7 +944,6 @@ Value LowerFunction::rewriteCallOp(const LowerFunctionInfo &CallInfo,
     switch (ArgInfo.getKind()) {
     case ABIArgInfo::Extend:
     case ABIArgInfo::Direct: {
-
       if (isa<BoolType>(info_it->type)) {
         IRCallArgs[FirstIRArg] = *I;
         break;
@@ -955,6 +1009,34 @@ Value LowerFunction::rewriteCallOp(const LowerFunctionInfo &CallInfo,
           cir_cconv_unreachable("NYI");
         IRCallArgs[FirstIRArg] = Load;
       }
+
+      break;
+    }
+    case ABIArgInfo::Indirect:
+    case ABIArgInfo::IndirectAliased: {
+      assert(NumIRArgs == 1);
+      // TODO(cir): For aggregate types
+      // We want to avoid creating an unnecessary temporary+copy here;
+      // however, we need one in three cases:
+      // 1. If the argument is not byval, and we are required to copy the
+      // 2. If the argument is byval, RV is not sufficiently aligned, and
+      //    source.  (This case doesn't occur on any common architecture.)
+      //    we cannot force it to be sufficiently aligned.
+      // 3. If the argument is byval, but RV is not located in default
+      //    or alloca address space.
+
+      // TODO(cir): Skipping check for temporary copy. We should check if
+      // creating the copy is necessary.
+
+      Value Alloca = getAllocaVal(*I, *this);
+
+      // since they are a ARM-specific feature.
+      if (::cir::MissingFeatures::undef())
+        cir_cconv_unreachable("NYI");
+
+      IRCallArgs[FirstIRArg] = Alloca;
+
+      // NOTE(cir): Skipping Emissions, lifetime markers.
 
       break;
     }
@@ -1092,6 +1174,10 @@ Value LowerFunction::rewriteCallOp(const LowerFunctionInfo &CallInfo,
       // NOTE(cir): No need to convert from a temp to an RValue. This is
       // done in CIRGen
       return RetVal;
+    }
+    case ABIArgInfo::Indirect: {
+      auto Load = rewriter.create<LoadOp>(loc, SRetPtr);
+      return Load.getResult();
     }
     default:
       llvm::errs() << "Unhandled ABIArgInfo kind: " << RetAI.getKind() << "\n";
