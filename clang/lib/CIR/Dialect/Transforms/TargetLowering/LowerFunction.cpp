@@ -862,7 +862,9 @@ Value LowerFunction::rewriteCallOp(const LowerFunctionInfo &CallInfo,
   // If the call returns a temporary with struct return, create a temporary
   // alloca to hold the result, unless one is given to us.
   if (RetAI.isIndirect() || RetAI.isCoerceAndExpand() || RetAI.isInAlloca()) {
-    cir_cconv_unreachable("NYI");
+    SRetPtr = createAlloca(loc, RetTy,
+                           /*alignment=*/rewriter.getI64IntegerAttr(4), *this);
+    IRCallArgs[IRFunctionArgs.getSRetArgNo()] = SRetPtr;
   }
 
   cir_cconv_assert(!::cir::MissingFeatures::swift());
