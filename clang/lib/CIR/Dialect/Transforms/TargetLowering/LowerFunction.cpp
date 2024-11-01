@@ -73,10 +73,77 @@ Value enterStructPointerForCoercedAccess(Value SrcPtr, StructType SrcSTy,
       FirstEltSize < CGF.LM.getDataLayout().getTypeStoreSize(SrcSTy))
     return SrcPtr;
 
+  if (auto Load = dyn_cast<LoadOp>(SrcPtr.getDefiningOp())) {
+    auto &bld = CGF.getRewriter();
+    auto getMemOp = bld.create<GetMemberOp>(
+        SrcPtr.getLoc(), PointerType::get(bld.getContext(), FirstElt),
+        Load.getAddr(), /*name*/ llvm::StringRef(""), 0);
+    SrcPtr = bld.create<LoadOp>(SrcPtr.getLoc(), getMemOp.getResult());
+  }
+
   cir_cconv_assert_or_abort(
       !::cir::MissingFeatures::ABIEnterStructForCoercedAccess(), "NYI");
+
   return SrcPtr; // FIXME: This is a temporary workaround for the assertion
                  // above.
+}
+
+/// CoerceIntOrPtrToIntOrPtr - Convert a value Val to the specific Ty where both
+/// are either integers or pointers.  This does a truncation of the value if it
+/// is too large or a zero extension if it is too small.
+///
+/// This behaves as if the value were coerced through memory, so on big-endian
+/// targets the high bits are preserved in a truncation, while little-endian
+/// targets preserve the low bits.
+static Value coerceIntOrPtrToIntOrPtr(Value val, Type typ, LowerFunction &CGF) {
+  if (val.getType() == typ)
+    return val;
+
+  auto &bld = CGF.getRewriter();
+
+  if (isa<PointerType>(val.getType())) {
+    // If this is Pointer->Pointer avoid conversion to and from int.
+    if (isa<PointerType>(typ))
+      return bld.create<CastOp>(val.getLoc(), typ, CastKind::bitcast, val);
+
+    // Convert the pointer to an integer so we can play with its width.
+    val = bld.create<CastOp>(val.getLoc(), typ, CastKind::ptr_to_int, val);
+  }
+
+  auto dstIntTy = typ;
+  if (isa<PointerType>(dstIntTy))
+    llvm_unreachable("NYI");
+
+  if (val.getType() != dstIntTy) {
+    const auto &layout = CGF.LM.getDataLayout();
+    if (layout.isBigEndian()) {
+      // Preserve the high bits on big-endian targets.
+      // That is what memory coercion does.
+      uint64_t srcSize = layout.getTypeSizeInBits(val.getType());
+      uint64_t dstSize = layout.getTypeSizeInBits(dstIntTy);
+      uint64_t diff = srcSize > dstSize ? srcSize - dstSize : dstSize - srcSize;
+      auto loc = val.getLoc();
+      if (srcSize > dstSize) {
+        auto intAttr = IntAttr::get(val.getType(), diff);
+        auto amount = bld.create<ConstantOp>(loc, intAttr);
+        val = bld.create<ShiftOp>(loc, val.getType(), val, amount, false);
+        val = bld.create<CastOp>(loc, dstIntTy, CastKind::integral, val);
+      } else {
+        val = bld.create<CastOp>(loc, dstIntTy, CastKind::integral, val);
+        auto intAttr = IntAttr::get(val.getType(), diff);
+        auto amount = bld.create<ConstantOp>(loc, intAttr);
+        val = bld.create<ShiftOp>(loc, val.getType(), val, amount, true);
+      }
+    } else {
+      // Little-endian targets preserve the low bits. No shifts required.
+      val = bld.create<CastOp>(val.getLoc(), dstIntTy, CastKind::integral, val);
+    }
+  }
+
+  if (isa<PointerType>(typ))
+    val = bld.create<CastOp>(val.getLoc(), typ, CastKind::int_to_ptr, val);
+
+  return val;
 }
 
 /// Create a store to \param Dst from \param Src where the source and
@@ -172,7 +239,7 @@ Value createCoercedValue(Value Src, Type Ty, LowerFunction &CGF) {
   // extension or truncation to the desired type.
   if ((isa<IntType>(Ty) || isa<PointerType>(Ty)) &&
       (isa<IntType>(SrcTy) || isa<PointerType>(SrcTy))) {
-    cir_cconv_unreachable("NYI");
+    return coerceIntOrPtrToIntOrPtr(Src, Ty, CGF);
   }
 
   // If load is legal, just bitcast the src pointer.
