@@ -523,12 +523,12 @@ void ItaniumRecordLayoutBuilder::checkFieldPadding(
   // Warn if padding was introduced to the struct/class.
   if (!IsUnion && Offset > UnpaddedOffset) {
     unsigned PadSize = Offset - UnpaddedOffset;
-    // bool InBits = true;
+    bool InBits = true;
     if (PadSize % CharBitNum == 0) {
       PadSize = PadSize / CharBitNum;
-      // InBits = false;
+      InBits = false;
     }
-    cir_cconv_assert(::cir::MissingFeatures::bitFieldPaddingDiagnostics());
+    cir_cconv_assert(!::cir::MissingFeatures::bitFieldPaddingDiagnostics());
   }
   if (isPacked && Offset != UnpackedOffset) {
     HasPackedField = true;

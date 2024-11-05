@@ -73,14 +73,6 @@ Value enterStructPointerForCoercedAccess(Value SrcPtr, StructType SrcSTy,
       FirstEltSize < CGF.LM.getDataLayout().getTypeStoreSize(SrcSTy))
     return SrcPtr;
 
-  if (auto Load = dyn_cast<LoadOp>(SrcPtr.getDefiningOp())) {
-    auto &bld = CGF.getRewriter();
-    auto getMemOp = bld.create<GetMemberOp>(
-        SrcPtr.getLoc(), PointerType::get(bld.getContext(), FirstElt),
-        Load.getAddr(), /*name*/ llvm::StringRef(""), 0);
-    SrcPtr = bld.create<LoadOp>(SrcPtr.getLoc(), getMemOp.getResult());
-  }
-
   cir_cconv_assert_or_abort(
       !::cir::MissingFeatures::ABIEnterStructForCoercedAccess(), "NYI");
 
@@ -287,8 +279,9 @@ Value castReturnValue(Value Src, Type Ty, LowerFunction &LF) {
     return createBitcast(Src, Ty, LF);
 
   auto intTy = dyn_cast<IntType>(Ty);
-  if (intTy && !intTy.isPrimitive())
+  if (intTy && !intTy.isPrimitive()) {
     cir_cconv_unreachable("non-primitive types NYI");
+  }
   llvm::TypeSize DstSize = LF.LM.getDataLayout().getTypeAllocSize(Ty);
 
   // FIXME(cir): Do we need the EnterStructPointerForCoercedAccess routine here?
