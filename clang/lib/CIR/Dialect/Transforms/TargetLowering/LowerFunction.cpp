@@ -257,6 +257,42 @@ Value emitAddressAtOffset(LowerFunction &LF, Value addr,
   return addr;
 }
 
+Value createNonPrimitiveValue(Value Src, Type Ty, LowerFunction &LF) {
+  if (auto Load = dyn_cast<LoadOp>(Src.getDefiningOp())) {
+    auto &bld = LF.getRewriter();
+    auto Addr = Load.getAddr();
+
+    auto oldAlloca = dyn_cast<AllocaOp>(Addr.getDefiningOp());
+    auto Alloca = bld.create<AllocaOp>(
+        Src.getLoc(), bld.getType<PointerType>(Ty), Ty,
+        /*name=*/StringRef(""), oldAlloca.getAlignmentAttr());
+
+    auto Size = LF.LM.getDataLayout().getTypeStoreSize(Ty);
+    auto uInt64Ty = IntType::get(bld.getContext(), 64, false);
+    auto SizeVal = bld.create<ConstantOp>(Src.getLoc(), uInt64Ty,
+                                          IntAttr::get(uInt64Ty, Size));
+
+    auto VoidTy = VoidType::get(bld.getContext());
+    auto VoidPtrTy = PointerType::get(bld.getContext(), VoidTy);
+
+    auto SrcVoidPtr =
+        bld.create<CastOp>(Src.getLoc(), VoidPtrTy, CastKind::bitcast, Addr);
+    auto DestVoidPtr =
+        bld.create<CastOp>(Src.getLoc(), VoidPtrTy, CastKind::bitcast, Alloca);
+
+    bld.create<MemCpyOp>(Src.getLoc(), DestVoidPtr, SrcVoidPtr, SizeVal);
+
+    auto newLoad = bld.create<LoadOp>(Src.getLoc(), Alloca.getResult());
+    bld.replaceAllOpUsesWith(Load, newLoad);
+
+    if (Load.getOperation()->use_empty())
+      bld.eraseOp(Load);
+
+    return newLoad;
+  }
+  return {};
+}
+
 /// After the calling convention is lowered, an ABI-agnostic type might have to
 /// be loaded back to its ABI-aware couterpart so it may be returned. If they
 /// differ, we have to do a coerced load. A coerced load, which means to load a
@@ -280,7 +316,8 @@ Value castReturnValue(Value Src, Type Ty, LowerFunction &LF) {
 
   auto intTy = dyn_cast<IntType>(Ty);
   if (intTy && !intTy.isPrimitive()) {
-    cir_cconv_unreachable("non-primitive types NYI");
+    return createNonPrimitiveValue(Src, Ty, LF);
+    // cir_cconv_unreachable("non-primitive types NYI");
   }
   llvm::TypeSize DstSize = LF.LM.getDataLayout().getTypeAllocSize(Ty);
 
@@ -854,11 +891,12 @@ Value LowerFunction::rewriteCallOp(FuncType calleeTy, FuncOp origCallee,
   return CallResult;
 }
 
-Value createAlloca(Location loc, Type type, IntegerAttr alignment,
-                   LowerFunction &CGF) {
+Value createAlloca(Location loc, Type type, LowerFunction &CGF) {
+  auto align = CGF.LM.getDataLayout().getABITypeAlign(type);
+  auto alignAttr = CGF.getRewriter().getI64IntegerAttr(align.value());
   return CGF.getRewriter().create<AllocaOp>(
       loc, CGF.getRewriter().getType<PointerType>(type), type,
-      /*name=*/StringRef(""), alignment);
+      /*name=*/StringRef(""), alignAttr);
 }
 
 Value getAllocaVal(Value Src, LowerFunction &CGF) {
@@ -909,8 +947,7 @@ Value LowerFunction::rewriteCallOp(const LowerFunctionInfo &CallInfo,
   // If the call returns a temporary with struct return, create a temporary
   // alloca to hold the result, unless one is given to us.
   if (RetAI.isIndirect() || RetAI.isCoerceAndExpand() || RetAI.isInAlloca()) {
-    SRetPtr = createAlloca(loc, RetTy,
-                           /*alignment=*/rewriter.getI64IntegerAttr(4), *this);
+    SRetPtr = createAlloca(loc, RetTy, *this);
     IRCallArgs[IRFunctionArgs.getSRetArgNo()] = SRetPtr;
   }
 

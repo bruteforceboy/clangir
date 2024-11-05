@@ -223,6 +223,10 @@ public:
   /// Initialize record layout for the given record decl.
   void initializeLayout(const Type Ty);
 
+  /// FinishLayout - Finalize record layout. Adjust record size based on the
+  /// alignment.
+  void finishLayout(const StructType D);
+
   uint64_t getDataSizeInBits() const { return DataSize; }
 
   void setDataSize(clang::CharUnits NewSize) {
@@ -245,6 +249,8 @@ void ItaniumRecordLayoutBuilder::layout(const StructType RT) {
 
   cir_cconv_assert(
       !::cir::MissingFeatures::itaniumRecordLayoutBuilderFinishLayout());
+
+  finishLayout(RT);
 }
 
 void ItaniumRecordLayoutBuilder::initializeLayout(const mlir::Type Ty) {
@@ -477,6 +483,31 @@ void ItaniumRecordLayoutBuilder::layoutFields(const StructType D) {
     layoutField(FT, InsertExtraPadding && (FT != D.getMembers().back() ||
                                            !HasFlexibleArrayMember));
   }
+}
+
+void ItaniumRecordLayoutBuilder::finishLayout(const StructType D) {
+  // If we have any remaining field tail padding, include that in the overall
+  // size.
+  setSize(std::max(getSizeInBits(), (uint64_t)Context.toBits(PaddedFieldSize)));
+
+  // Finally, round the size of the record up to the alignment of the
+  // record itself.
+  uint64_t UnpaddedSize = getSizeInBits() - UnfilledBitsInLastUnit;
+  uint64_t UnpackedSizeInBits =
+      llvm::alignTo(getSizeInBits(), Context.toBits(UnpackedAlignment));
+
+  uint64_t RoundedSize = llvm::alignTo(
+      getSizeInBits(),
+      Context.toBits(!Context.getTargetInfo().defaultsToAIXPowerAlignment()
+                         ? Alignment
+                         : PreferredAlignment));
+
+  if (UseExternalLayout) {
+    cir_cconv_unreachable("NYI");
+  }
+
+  // Set the size to the final size.
+  setSize(RoundedSize);
 }
 
 void ItaniumRecordLayoutBuilder::UpdateAlignment(
