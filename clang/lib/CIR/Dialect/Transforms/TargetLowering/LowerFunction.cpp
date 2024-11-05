@@ -916,9 +916,8 @@ Value LowerFunction::rewriteCallOp(const LowerFunctionInfo &CallInfo,
   // If the call returns a temporary with struct return, create a temporary
   // alloca to hold the result, unless one is given to us.
   if (RetAI.isIndirect() || RetAI.isCoerceAndExpand() || RetAI.isInAlloca()) {
-    auto alignment =
-        IntegerAttr::get(mlir::IntegerType::get(rewriter.getContext(), 64), 8);
-    SRetPtr = createAlloca(loc, RetTy, alignment, *this);
+    SRetPtr = createAlloca(loc, RetTy,
+                           /*alignment=*/rewriter.getI64IntegerAttr(4), *this);
     IRCallArgs[IRFunctionArgs.getSRetArgNo()] = SRetPtr;
   }
 
