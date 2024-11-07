@@ -70,11 +70,23 @@ Value enterStructPointerForCoercedAccess(Value SrcPtr, StructType SrcSTy,
   // the alloca size may overstate the size of the load.
   uint64_t FirstEltSize = CGF.LM.getDataLayout().getTypeStoreSize(FirstElt);
   if (FirstEltSize < DstSize &&
-      FirstEltSize < CGF.LM.getDataLayout().getTypeStoreSize(SrcSTy))
+      FirstEltSize < CGF.LM.getDataLayout().getTypeStoreSize(SrcSTy)) {
     return SrcPtr;
+  }
 
-  cir_cconv_assert_or_abort(
-      !::cir::MissingFeatures::ABIEnterStructForCoercedAccess(), "NYI");
+  // add bitcast to the FirstElt here / insert GetMemberOp
+  if (auto Load = dyn_cast<LoadOp>(SrcPtr.getDefiningOp())) {
+    auto &bld = CGF.getRewriter();
+    auto getMemOp = bld.create<GetMemberOp>(
+        SrcPtr.getLoc(), PointerType::get(bld.getContext(), FirstElt),
+        Load.getAddr(), /*name*/ llvm::StringRef(""), 0);
+    SrcPtr = bld.create<LoadOp>(SrcPtr.getLoc(), getMemOp.getResult());
+  }
+
+  auto SrcTy = SrcPtr.getType();
+  if (auto SrcSTy = dyn_cast<StructType>(SrcTy))
+    return enterStructPointerForCoercedAccess(SrcPtr, SrcSTy, DstSize, CGF);
+
   return SrcPtr; // FIXME: This is a temporary workaround for the assertion
                  // above.
 }
@@ -222,7 +234,12 @@ Value createCoercedValue(Value Src, Type Ty, LowerFunction &CGF) {
   if (auto SrcSTy = dyn_cast<StructType>(SrcTy)) {
     Src = enterStructPointerForCoercedAccess(Src, SrcSTy,
                                              DstSize.getFixedValue(), CGF);
-    SrcTy = Src.getType();
+    // A substitute for getElementType
+    SrcSTy = dyn_cast<StructType>(Src.getType());
+    if (SrcSTy)
+      SrcTy = SrcSTy.getMembers()[0];
+    else
+      SrcTy = Src.getType();
   }
 
   llvm::TypeSize SrcSize = CGF.LM.getDataLayout().getTypeAllocSize(SrcTy);
@@ -231,7 +248,9 @@ Value createCoercedValue(Value Src, Type Ty, LowerFunction &CGF) {
   // extension or truncation to the desired type.
   if ((isa<IntType>(Ty) || isa<PointerType>(Ty)) &&
       (isa<IntType>(SrcTy) || isa<PointerType>(SrcTy))) {
-    cir_cconv_unreachable("NYI");
+    auto Cast = createCoercedBitcast(Src, Ty, CGF);
+    auto Load = CGF.getRewriter().create<LoadOp>(Src.getLoc(), Cast);
+    return coerceIntOrPtrToIntOrPtr(Load, Ty, CGF);
   }
 
   // If load is legal, just bitcast the src pointer.
