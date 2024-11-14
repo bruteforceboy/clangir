@@ -85,7 +85,6 @@ typedef union {
 void noCrushOnDifferentSizes() {
   A a = {0};
   // CHECK:  %[[#TMP0:]] = cir.alloca !ty_A, !cir.ptr<!ty_A>, ["a"] {alignment = 4 : i64}
-  // CHECK:  %[[#TMP1:]] = cir.cast(bitcast, %[[#TMP0]] : !cir.ptr<!ty_A>), !cir.ptr<!ty_anon_struct>
-  // CHECK:  %[[#TMP2:]] = cir.const #cir.zero : !ty_anon_struct
-  // CHECK:  cir.store %[[#TMP2]], %[[#TMP1]] : !ty_anon_struct, !cir.ptr<!ty_anon_struct>
+  // CHECK:  %[[#TMP1:]] = cir.const #cir.zero : !ty_A
+  // CHECK:  cir.store %[[#TMP1]], %[[#TMP0]] : !ty_A, !cir.ptr<!ty_A>
 }

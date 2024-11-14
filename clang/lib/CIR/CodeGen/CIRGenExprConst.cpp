@@ -377,6 +377,7 @@ mlir::Attribute ConstantAggregateBuilder::buildFrom(
   CharUnits AlignedSize = Size.alignTo(Align);
 
   bool Packed = false;
+  bool UnpackedUnion = false;
   ArrayRef<mlir::Attribute> UnpackedElems;
 
   // Fill the init elements for union. This comes from a fundamental
@@ -399,6 +400,7 @@ mlir::Attribute ConstantAggregateBuilder::buildFrom(
             CGM.getBuilder().getContext(), elemTy));
     }
 
+    UnpackedUnion = true;
     UnpackedElems = UnionElemsStorage;
   } else
     UnpackedElems = Elems;
@@ -411,7 +413,8 @@ mlir::Attribute ConstantAggregateBuilder::buildFrom(
     // The natural layout would be too small. Add padding to fix it. (This
     // is ignored if we choose a packed layout.)
     UnpackedElemStorage.assign(UnpackedElems.begin(), UnpackedElems.end());
-    UnpackedElemStorage.push_back(Utils.getPadding(DesiredSize - Size));
+    if (!UnpackedUnion)
+      UnpackedElemStorage.push_back(Utils.getPadding(DesiredSize - Size));
     UnpackedElems = UnpackedElemStorage;
   }
 

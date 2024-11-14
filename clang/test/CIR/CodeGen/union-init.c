@@ -14,11 +14,14 @@ void foo(int x) {
 
 // CHECK-DAG: ![[TY_U:.*]] = !cir.struct<union "U" {!s32i}>
 // CHECK-DAG: ![[anon0:.*]] = !cir.struct<struct {{.*}}{!u32i}
+// CHECK-DAG: ![[anon4:.*]] = !cir.struct<struct "anon.4" {!s32i, !s32i}
 // CHECK-DAG: ![[TY_u:.*]] = !cir.struct<union {{.*}}{!s32i, !cir.float}
 // CHECK-DAG: #[[bfi_x:.*]] = #cir.bitfield_info<name = "x", storage_type = !u32i, size = 16, offset = 0, is_signed = true>
 // CHECK-DAG: #[[bfi_y:.*]] = #cir.bitfield_info<name = "y", storage_type = !u32i, size = 16, offset = 16, is_signed = true>
 // CHECK-DAG: ![[TY_A:.*]] = !cir.struct<union "A" {!s32i, ![[anon0]]}>
 // CHECK-DAG: ![[anon1:.*]] = !cir.struct<union "{{.*}}" {!u32i, !cir.array<!u8i x 4>}
+// CHECK-DAG: ![[anon3:.*]] = !cir.struct<union "anon.3" {![[anon4]], !s32i}
+// CHECK-DAG: ![[TY_E:.*]] = !cir.struct<struct "E" {![[anon3]], !s32i}
 
 // CHECK-LABEL:   cir.func @foo(
 // CHECK:  %[[VAL_1:.*]] = cir.alloca !s32i, !cir.ptr<!s32i>, ["x", init] {alignment = 4 : i64}
@@ -62,3 +65,16 @@ typedef union {
 void union_cast(int x) {
   U u = (U) x;
 }
+
+typedef struct {
+  union {
+    struct {
+      int a, b;
+    };
+    int c;
+  };
+  int d;
+} E;
+
+// CHECK: cir.const_struct<{#cir.const_struct<{#cir.inactive_field : ![[anon4]], #cir.int<1> : !s32i}> : ![[anon3]], #cir.int<0> : !s32i}> : !ty_E {alignment = 4 : i64}
+E e = { .c = 1 };
