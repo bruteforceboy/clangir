@@ -376,3 +376,36 @@ void refoo() {
 // CIR:  }]
 // CIR: }
 // CIR: cir.return
+
+// CIR_FLAT-LABEL: @__cxa_rethrow()
+// CIR_FLAT-LABEL: @_Z5refoov()
+// CIR-FLAT:   %[[V0:.*]] = cir.alloca !ty_S, !cir.ptr<!ty_S>, ["s", init] {alignment = 1 : i64}
+// CIR-FLAT:   %[[V1:.*]] = cir.alloca !s32i, !cir.ptr<!s32i>, ["r", init] {alignment = 4 : i64}
+// CIR-FLAT:   %[[V2:.*]] = cir.const #cir.int<1> : !s32i
+// CIR-FLAT:   cir.store %[[V2]], %[[V1]] : !s32i, !cir.ptr<!s32i>
+// CIR-FLAT:   cir.br ^bb1
+// CIR-FLAT: ^bb1:  // pred: ^bb0
+// CIR-FLAT:   cir.br ^bb2
+// CIR-FLAT: ^bb2:  // pred: ^bb1
+// CIR-FLAT:   cir.try_call @_ZN1SC2Ev(%[[V0]]) ^bb3, ^bb7 : (!cir.ptr<!ty_S>) -> ()
+// CIR-FLAT: ^bb3:  // pred: ^bb2
+// CIR-FLAT:   cir.try_call @__cxa_rethrow() ^bb4, ^bb8 : () -> ()
+// CIR-FLAT: ^bb4:  // pred: ^bb3
+// CIR-FLAT:   cir.br ^bb5
+// CIR-FLAT: ^bb5:  // pred: ^bb4
+// CIR-FLAT:   cir.unreachable
+// CIR-FLAT: ^bb6:  // no predecessors
+// CIR-FLAT:   cir.br ^bb10
+// CIR-FLAT: ^bb7:  // pred: ^bb2
+// CIR-FLAT:   %exception_ptr, %type_id = cir.eh.inflight_exception
+// CIR-FLAT:   cir.br ^bb9(%exception_ptr : !cir.ptr<!void>)
+// CIR-FLAT: ^bb8:  // pred: ^bb3
+// CIR-FLAT:   %exception_ptr_0, %type_id_1 = cir.eh.inflight_exception
+// CIR-FLAT:   cir.br ^bb9(%exception_ptr_0 : !cir.ptr<!void>)
+// CIR-FLAT: ^bb9(%[[V3]]: !cir.ptr<!void>
+// CIR-FLAT:   %[[V4:.*]] = cir.catch_param begin %[[V3]] -> !cir.ptr<!void>
+// CIR-FLAT:   %[[V5]] = cir.load %[[V1]] : !cir.ptr<!s32i>, !s32i
+// CIR-FLAT:   %[[V6]] = cir.unary(inc, %[[V5]]) : !s32i, !s32i
+// CIR-FLAT:   cir.store %[[V6]], %[[V1]] : !s32i, !cir.ptr<!s32i>
+// CIR-FLAT:   cir.catch_param end
+// CIR-FLAT:   cir.br ^bb10
