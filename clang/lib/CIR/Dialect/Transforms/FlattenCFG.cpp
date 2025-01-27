@@ -425,10 +425,19 @@ public:
                      SmallVectorImpl<cir::CallOp> &callsToRewrite,
                      SmallVectorImpl<mlir::Block *> &landingPads) const {
     // Replace the tryOp return with a branch that jumps out of the body.
+    printf("The after body is\n");
+    afterBody->walk([&](Operation* op) {
+      op->dump();
+    });
+
     rewriter.setInsertionPointToEnd(afterBody);
     auto tryBodyYield = cast<cir::YieldOp>(afterBody->getTerminator());
 
     mlir::Block *beforeCatch = rewriter.getInsertionBlock();
+    printf("The block before catch is\n");
+    beforeCatch->walk([&](Operation* op) {
+      op->dump();
+    });
     rewriter.setInsertionPointToEnd(beforeCatch);
     rewriter.replaceOpWithNewOp<cir::BrOp>(tryBodyYield, afterTry);
 

@@ -316,6 +316,8 @@ mlir::LogicalResult CIRGenFunction::emitCXXTryStmt(const CXXTryStmt &S) {
     r = emitCXXTryStmtUnderScope(S);
     getBuilder().create<cir::YieldOp>(loc);
   }
+  printf("The scope after is\n");
+  s.dump();
   return r;
 }
 
