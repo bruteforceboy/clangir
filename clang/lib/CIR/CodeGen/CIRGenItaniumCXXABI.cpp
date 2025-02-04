@@ -2278,7 +2278,11 @@ void CIRGenItaniumCXXABI::emitRethrow(CIRGenFunction &CGF, bool isNoReturn) {
     auto currentBlock = builder.getInsertionBlock();
     auto reg = currentBlock->getParent();
 
-    bool branch = !currentBlock->empty();
+    bool branch = false;
+    if (currentBlock->empty())
+      currentBlock->erase();
+    else
+      branch = true;
 
     auto rethrowBlock = builder.createBlock(reg);
     builder.setInsertionPointToStart(rethrowBlock);
