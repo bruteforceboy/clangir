@@ -2273,17 +2273,12 @@ void CIRGenItaniumCXXABI::emitRethrow(CIRGenFunction &CGF, bool isNoReturn) {
 
     // The idea here is creating a separate block for the rethrow with an
     // `UnreachableOp` as the terminator. So, we branch from the current block
-    // to the rethrow block (or erase if empty) and create a block for the
-    // remaining operations.
+    // to the rethrow block and create a block for the remaining operations.
 
     auto currentBlock = builder.getInsertionBlock();
     auto reg = currentBlock->getParent();
 
-    bool branch = false;
-    if (currentBlock->empty())
-      currentBlock->erase();
-    else
-      branch = true;
+    bool branch = !currentBlock->empty();
 
     auto rethrowBlock = builder.createBlock(reg);
     builder.setInsertionPointToStart(rethrowBlock);
