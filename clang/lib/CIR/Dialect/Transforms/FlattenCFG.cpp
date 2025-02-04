@@ -543,6 +543,22 @@ public:
       rewriter.eraseOp(brOp);
       rewriter.mergeBlocks(srcBlock, afterTry);
     }
+
+    for (auto &block : afterTry->getParent()->getBlocks()) {
+      bool onlyYield = true;
+      YieldOp theYield;
+      block.walk([&](mlir::Operation *op) {
+        if (!isa<YieldOp>(op))
+          onlyYield = false;
+        else
+          theYield = dyn_cast<YieldOp>(op);
+      });
+      if (onlyYield) {
+        rewriter.setInsertionPoint(theYield);
+        rewriter.replaceOpWithNewOp<cir::BrOp>(theYield, afterTry);
+      }
+    }
+
     return mlir::success();
   }
 };

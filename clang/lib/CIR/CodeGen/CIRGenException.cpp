@@ -297,6 +297,17 @@ mlir::Block *CIRGenFunction::getEHResumeBlock(bool isCleanup,
   return ehResumeBlock;
 }
 
+mlir::Operation* getNextOp(mlir::Operation* op) {
+  mlir::Operation* prev = nullptr;
+  mlir::Operation* nextOp = nullptr;
+  op->getBlock()->walk<mlir::WalkOrder::PreOrder>([&](mlir::Operation* curOp) {
+    if (prev == op) 
+      nextOp = curOp;
+    prev = curOp;
+  });
+  return nextOp;
+}
+
 mlir::LogicalResult CIRGenFunction::emitCXXTryStmt(const CXXTryStmt &S) {
   auto loc = getLoc(S.getSourceRange());
   mlir::OpBuilder::InsertPoint scopeIP;
@@ -316,6 +327,94 @@ mlir::LogicalResult CIRGenFunction::emitCXXTryStmt(const CXXTryStmt &S) {
     r = emitCXXTryStmtUnderScope(S);
     getBuilder().create<cir::YieldOp>(loc);
   }
+
+  // auto deleteOpsInBlockAfter = [&](cir::CallOp rethrow) {
+  //   cir::YieldOp theYieldOp;
+  //   auto blk = rethrow->getBlock();
+  //   llvm::SmallVector<mlir::Operation*> toErase;
+  //   rethrow->getBlock()->walk([&](mlir::Operation* op) {
+  //     if (op != rethrow.getOperation())
+  //       toErase.push_back(op);
+  //   });
+  //   for (auto op : toErase)
+  //     op->erase();
+
+  //   getBuilder().setInsertionPointToEnd(blk);
+  //   // getBuilder().setInsertionPointAfter(theYieldOp);
+  //   getBuilder().create<cir::YieldOp>(rethrow.getLoc());
+  //   // theYieldOp.erase();
+  //   // getBuilder().setInsertionPointToEnd(rethrow->getBlock());
+  //   // getBuilder().create<cir::YieldOp>(rethrow.getLoc());
+  // };
+
+  mlir::Region* tryRegion;  
+
+  s->walk<mlir::WalkOrder::PreOrder>([&](mlir::Operation* op) {
+    if (auto tryOp = dyn_cast<cir::TryOp>(op)) {
+      tryRegion = &tryOp.getTryRegion();
+    }
+    // if (op.getCallee() && op.getCallee()->str() == "__cxa_rethrow") {
+    //   deleteOpsInBlockAfter(op);
+    //   return mlir::WalkResult::interrupt();
+    //   // auto blk = getBuilder().createBlock(s->getParentRegion());
+    //   // getBuilder().setInsertionPointToEnd(blk);
+    //   // getBuilder().
+    //   // mlir::Operation nextOp;
+    //   // op->walk<mlir::WalkOrder::PostOrder([&](Operation* nextOp) {
+
+    //   // });
+    //   // auto blk = s->getBlock();
+    //   // blk->splitBlock(op);
+    //   // getBuilder().setInsertionPointAfter(op);
+    //   // auto blk = getBuilder().createBlock(s->getParentRegion());
+    //   // getBuilder().setInsertionPointToEnd(blk);
+    //   // getBuilder().create<cir::UnreachableOp>(loc);
+    //   // llvm::outs() << "The callee attr is: " << op.getCallee() << "\n";
+    //   // if (auto parentOp = op->getParentOp()) {
+    //   //   printf("the parent op is\n");
+    //   //   parentOp->dump();
+    //   // }
+    // }
+  });
+
+  // printf("The try region is\n");
+
+  // cir::CallOp rethrow;
+  // bool to_delete = false;
+  // std::set<mlir::Operation*> opsToErase;
+  // tryRegion->walk<mlir::WalkOrder::PreOrder>([&](mlir::Operation* op) {
+  //   if (auto callOp = dyn_cast<cir::CallOp>(op)) {
+  //     if (callOp.getCallee() && callOp.getCallee()->str() == "__cxa_rethrow") {
+  //       getBuilder().setInsertionPoint(callOp);
+  //       // auto yield = getBuilder().create<cir::YieldOp>(callOp.getLoc());
+  //       callOp.getOperation()->getBlock()->splitBlock(callOp);
+  //       // auto blk = getBuilder().createBlock(tryRegion, op);
+  //       return mlir::WalkResult::interrupt();
+  //     }
+  //   }
+  // });
+  // for (auto op : opsToErase)
+  //   op->erase();
+
+  // for (auto op : opsToRewrite) {
+    // auto *currentBlock = op.getInsertionBlock();
+    // mlir::Block *continueBlock =
+    // rewriter.splitBlock(currentBlock, rewriter.getInsertionPoint());
+
+      // auto nextOp = getNextOp(op.getOperation());
+      // getBuilder().setInsertionPoint(nextOp);
+      // getBuilder().create<cir::YieldOp>(loc);
+      // auto blk = op->getBlock();
+      // blk->splitBlock(nextOp);
+      // printf("The block we are splitting is\n");
+      // blk->dump();
+      // printf("The other block is\n");
+      // nextOp->getBlock()->dump();
+  // }
+
+  // s->dump();
+
+  // flatten the __cxa_rethrow into blocks
   return r;
 }
 
