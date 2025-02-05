@@ -377,37 +377,39 @@ void refoo1() {
 // CIR:   cir.return
 // CIR: }
 
-void refoo3() {
+void refoo2() {
   int r = 1;
   try {
     for (int i = 0; i < 5; i++) {
       S s;
       throw;
     }
+    S s;
   } catch (...) {
     ++r;
   }
 }
 
-// CIR-LABEL: @_Z6refoo3v()
+// CIR-LABEL: @_Z6refoo2v()
 // CIR:   %[[V0:.*]] = cir.alloca !s32i, !cir.ptr<!s32i>, ["r", init] {alignment = 4 : i64}
 // CIR:   %[[V1:.*]] = cir.const #cir.int<1> : !s32i
 // CIR:   cir.store %[[V1]], %[[V0]] : !s32i, !cir.ptr<!s32i>
 // CIR:   cir.scope {
+// CIR:     %[[V2:.*]] = cir.alloca !ty_S, !cir.ptr<!ty_S>, ["s", init] {alignment = 1 : i64}
 // CIR:     cir.try {
 // CIR:       cir.scope {
-// CIR:         %[[V2:.*]] = cir.alloca !s32i, !cir.ptr<!s32i>, ["i", init] {alignment = 4 : i64}
-// CIR:         %[[V3:.*]] = cir.const #cir.int<0> : !s32i
-// CIR:         cir.store %[[V3]], %[[V2]] : !s32i, !cir.ptr<!s32i>
+// CIR:         %[[V3:.*]] = cir.alloca !s32i, !cir.ptr<!s32i>, ["i", init] {alignment = 4 : i64}
+// CIR:         %[[V4:.*]] = cir.const #cir.int<0> : !s32i
+// CIR:         cir.store %[[V4]], %[[V3]] : !s32i, !cir.ptr<!s32i>
 // CIR:         cir.for : cond {
-// CIR:           %[[V4:.*]] = cir.load %[[V2]] : !cir.ptr<!s32i>, !s32i
-// CIR:           %[[V5:.*]] = cir.const #cir.int<5> : !s32i
-// CIR:           %[[V6:.*]] = cir.cmp(lt, %[[V4]], %[[V5]]) : !s32i, !cir.bool
-// CIR:           cir.condition(%[[V6]])
+// CIR:           %[[V5:.*]] = cir.load %[[V3]] : !cir.ptr<!s32i>, !s32i
+// CIR:           %[[V6:.*]] = cir.const #cir.int<5> : !s32i
+// CIR:           %[[V7:.*]] = cir.cmp(lt, %[[V5]], %[[V6]]) : !s32i, !cir.bool
+// CIR:           cir.condition(%[[V7]])
 // CIR:         } body {
 // CIR:           cir.scope {
-// CIR:             %[[V4:.*]] = cir.alloca !ty_S, !cir.ptr<!ty_S>, ["s", init] {alignment = 1 : i64}
-// CIR:             cir.call exception @_ZN1SC2Ev(%[[V4]]) : (!cir.ptr<!ty_S>) -> ()
+// CIR:             %[[V5:.*]] = cir.alloca !ty_S, !cir.ptr<!ty_S>, ["s", init] {alignment = 1 : i64}
+// CIR:             cir.call exception @_ZN1SC2Ev(%[[V5]]) : (!cir.ptr<!ty_S>) -> ()
 // CIR:             cir.call exception @__cxa_rethrow() : () -> ()
 // CIR:             cir.unreachable
 // CIR:           ^bb1:  // no predecessors
@@ -415,49 +417,13 @@ void refoo3() {
 // CIR:           }
 // CIR:           cir.yield
 // CIR:         } step {
-// CIR:           %[[V4:.*]] = cir.load %[[V2]] : !cir.ptr<!s32i>, !s32i
-// CIR:           %[[V5:.*]] = cir.unary(inc, %[[V4]]) : !s32i, !s32i
-// CIR:           cir.store %[[V5]], %[[V2]] : !s32i, !cir.ptr<!s32i>
+// CIR:           %[[V5:.*]] = cir.load %[[V3]] : !cir.ptr<!s32i>, !s32i
+// CIR:           %[[V6:.*]] = cir.unary(inc, %[[V5]]) : !s32i, !s32i
+// CIR:           cir.store %[[V6]], %[[V3]] : !s32i, !cir.ptr<!s32i>
 // CIR:           cir.yield
 // CIR:         }
 // CIR:       }
-// CIR:       cir.yield
-// CIR:     } catch [type #cir.all {
-// CIR:       %[[V2:.*]] = cir.catch_param -> !cir.ptr<!void>
-// CIR:       %[[V3:.*]] = cir.load %[[V0]] : !cir.ptr<!s32i>, !s32i
-// CIR:       %[[V4:.*]] = cir.unary(inc, %[[V3]]) : !s32i, !s32i
-// CIR:       cir.store %[[V4]], %[[V0]] : !s32i, !cir.ptr<!s32i>
-// CIR:       cir.yield
-// CIR:     }]
-// CIR:   }
-// CIR:   cir.return
-// CIR: }
-
-void refoo4() {
-  int r = 1;
-  try {
-    throw;
-    S s;
-    throw;
-  } catch (...) {
-    ++r;
-  }
-}
-
-// CIR-LABEL: @_Z6refoo4v()
-// CIR:   %[[V0:.*]] = cir.alloca !s32i, !cir.ptr<!s32i>, ["r", init] {alignment = 4 : i64}
-// CIR:   %[[V1:.*]] = cir.const #cir.int<1> : !s32i
-// CIR:   cir.store %[[V1]], %[[V0]] : !s32i, !cir.ptr<!s32i>
-// CIR:   cir.scope {
-// CIR:     %[[V2:.*]] = cir.alloca !ty_S, !cir.ptr<!ty_S>, ["s", init] {alignment = 1 : i64}
-// CIR:     cir.try {
-// CIR:       cir.call exception @__cxa_rethrow() : () -> ()
-// CIR:       cir.unreachable
-// CIR:     ^bb1:  // no predecessors
 // CIR:       cir.call exception @_ZN1SC2Ev(%[[V2]]) : (!cir.ptr<!ty_S>) -> ()
-// CIR:       cir.call exception @__cxa_rethrow() : () -> ()
-// CIR:       cir.unreachable
-// CIR:     ^bb2:  // no predecessors
 // CIR:       cir.yield
 // CIR:     } catch [type #cir.all {
 // CIR:       %[[V3:.*]] = cir.catch_param -> !cir.ptr<!void>
