@@ -200,7 +200,7 @@ void CIRGenFunction::emitCXXThrowExpr(const CXXThrowExpr *E) {
       CGM.getCXXABI().emitThrow(*this, E);
     }
   } else {
-    CGM.getCXXABI().emitRethrow(*this, /*isNoReturn=*/true);
+    CGM.getCXXABI().emitRethrow(*this, E, /*isNoReturn=*/true);
   }
 
   // In LLVM codegen the expression emitters expect to leave this

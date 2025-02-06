@@ -187,7 +187,8 @@ public:
                           QualType ThisTy) override;
   void registerGlobalDtor(CIRGenFunction &CGF, const VarDecl *D,
                           cir::FuncOp dtor, mlir::Value Addr) override;
-  virtual void emitRethrow(CIRGenFunction &CGF, bool isNoReturn) override;
+  virtual void emitRethrow(CIRGenFunction &CGF, const CXXThrowExpr *E,
+                           bool isNoReturn) override;
   virtual void emitThrow(CIRGenFunction &CGF, const CXXThrowExpr *E) override;
   CatchTypeInfo
   getAddrOfCXXCatchHandlerType(mlir::Location loc, QualType Ty,
@@ -2259,49 +2260,17 @@ mlir::Value CIRGenItaniumCXXABI::getCXXDestructorImplicitParam(
   return CGF.GetVTTParameter(GD, ForVirtualBase, Delegating);
 }
 
-void CIRGenItaniumCXXABI::emitRethrow(CIRGenFunction &CGF, bool isNoReturn) {
+void CIRGenItaniumCXXABI::emitRethrow(CIRGenFunction &CGF,
+                                      const CXXThrowExpr *E, bool isNoReturn) {
   // void __cxa_rethrow();
 
-  cir::FuncType FTy =
-      CGF.getBuilder().getFuncType({}, CGF.getBuilder().getVoidTy());
-
-  auto Fn = CGF.CGM.createRuntimeFunction(FTy, "__cxa_rethrow");
-  auto loc = Fn.getLoc();
+  auto loc = CGF.getLoc(E->getSourceRange());
 
   if (isNoReturn) {
     auto &builder = CGF.getBuilder();
-
-    // The idea here is creating a separate block for the rethrow with an
-    // `UnreachableOp` as the terminator. So, we branch from the current block
-    // to the rethrow block and create a block for the remaining operations.
-
-    auto currentBlock = builder.getInsertionBlock();
-    auto reg = currentBlock->getParent();
-
-    bool branch = false;
-    if (currentBlock->empty())
-      currentBlock->erase();
-    else
-      branch = true;
-
-    auto rethrowBlock = builder.createBlock(reg);
-    builder.setInsertionPointToStart(rethrowBlock);
-    builder.createTryCallOp(Fn.getLoc(), Fn, {});
+    builder.create<cir::ThrowOp>(loc, mlir::Value{}, mlir::FlatSymbolRefAttr{},
+                                 mlir::FlatSymbolRefAttr{});
     builder.create<cir::UnreachableOp>(loc);
-
-    if (branch) {
-      builder.setInsertionPointToEnd(currentBlock);
-      builder.create<cir::BrOp>(loc, rethrowBlock);
-    }
-
-    auto remBlock = builder.createBlock(reg);
-    builder.setInsertionPointToEnd(remBlock);
-    // This will be erased during codegen, it acts as a placeholder for the
-    // operations to be inserted (if any)
-    builder.create<cir::ScopeOp>(Fn.getLoc(), /*scopeBuilder=*/
-                                 [&](mlir::OpBuilder &b, mlir::Location loc) {
-                                   b.create<cir::YieldOp>(loc);
-                                 });
   } else {
     llvm_unreachable("NYI");
   }

@@ -4016,7 +4016,34 @@ mlir::LogicalResult CIRToLLVMFreeExceptionOpLowering::matchAndRewrite(
 mlir::LogicalResult CIRToLLVMThrowOpLowering::matchAndRewrite(
     cir::ThrowOp op, OpAdaptor adaptor,
     mlir::ConversionPatternRewriter &rewriter) const {
-  // Get or create `declare void @__cxa_throw(ptr, ptr, ptr)`
+  if (op.rethrows()) {
+    StringRef fnName = "__cxa_throw";
+  auto llvmPtrTy = mlir::LLVM::LLVMPointerType::get(rewriter.getContext());
+  auto voidTy = mlir::LLVM::LLVMVoidType::get(rewriter.getContext());
+  auto fnTy = mlir::LLVM::LLVMFunctionType::get(
+      voidTy, {},
+      /*isVarArg=*/false);
+  getOrCreateLLVMFuncOp(rewriter, op, fnName, fnTy);
+  // mlir::Value typeInfo = rewriter.create<mlir::LLVM::AddressOfOp>(
+  //     op.getLoc(), mlir::LLVM::LLVMPointerType::get(rewriter.getContext()),
+  //     adaptor.getTypeInfoAttr());
+
+  mlir::Value dtor;
+  if (op.getDtor()) {
+    dtor = rewriter.create<mlir::LLVM::AddressOfOp>(
+        op.getLoc(), mlir::LLVM::LLVMPointerType::get(rewriter.getContext()),
+        adaptor.getDtorAttr());
+  } else {
+    dtor = rewriter.create<mlir::LLVM::ZeroOp>(
+        op.getLoc(), mlir::LLVM::LLVMPointerType::get(rewriter.getContext()));
+  }
+  rewriter.replaceOpWithNewOp<mlir::LLVM::CallOp>(
+      op, mlir::TypeRange{}, fnName,
+      mlir::ValueRange{});
+  
+  return mlir::success();
+  }
+  // Get or create `dec lare void @__cxa_throw(ptr, ptr, ptr)`
   StringRef fnName = "__cxa_throw";
   auto llvmPtrTy = mlir::LLVM::LLVMPointerType::get(rewriter.getContext());
   auto voidTy = mlir::LLVM::LLVMVoidType::get(rewriter.getContext());

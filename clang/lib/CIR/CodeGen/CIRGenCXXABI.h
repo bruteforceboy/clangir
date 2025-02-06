@@ -331,7 +331,8 @@ public:
   /// constructor Decl.
   virtual void emitCXXStructor(clang::GlobalDecl GD) = 0;
 
-  virtual void emitRethrow(CIRGenFunction &CGF, bool isNoReturn) = 0;
+  virtual void emitRethrow(CIRGenFunction &CGF, const CXXThrowExpr *E,
+                           bool isNoReturn) = 0;
   virtual void emitThrow(CIRGenFunction &CGF, const CXXThrowExpr *E) = 0;
 
   virtual void emitBadCastCall(CIRGenFunction &CGF, mlir::Location loc) = 0;
