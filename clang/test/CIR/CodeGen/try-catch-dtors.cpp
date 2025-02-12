@@ -435,3 +435,13 @@ void refoo2() {
 // CIR:   }
 // CIR:   cir.return
 // CIR: }
+
+void refoo3() {
+  int r = 1;
+  try {
+    throw;
+    S s;
+  } catch (...) {
+    ++r;
+  }
+}
