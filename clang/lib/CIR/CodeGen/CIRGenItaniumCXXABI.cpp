@@ -2278,18 +2278,15 @@ void CIRGenItaniumCXXABI::emitRethrow(CIRGenFunction &CGF, bool isNoReturn) {
     auto currentBlock = builder.getInsertionBlock();
     auto reg = currentBlock->getParent();
 
-    bool branch = false;
-    if (currentBlock->empty())
-      currentBlock->erase();
-    else
-      branch = true;
+    if (currentBlock->empty()) {
+      builder.createTryCallOp(Fn.getLoc(), Fn, {});
+      builder.create<cir::UnreachableOp>(loc);
+    } else {
+      auto rethrowBlock = builder.createBlock(reg);
+      builder.setInsertionPointToStart(rethrowBlock);
+      builder.createTryCallOp(Fn.getLoc(), Fn, {});
+      builder.create<cir::UnreachableOp>(loc);
 
-    auto rethrowBlock = builder.createBlock(reg);
-    builder.setInsertionPointToStart(rethrowBlock);
-    builder.createTryCallOp(Fn.getLoc(), Fn, {});
-    builder.create<cir::UnreachableOp>(loc);
-
-    if (branch) {
       builder.setInsertionPointToEnd(currentBlock);
       builder.create<cir::BrOp>(loc, rethrowBlock);
     }
