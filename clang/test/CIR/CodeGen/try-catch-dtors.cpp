@@ -440,7 +440,7 @@ void refoo3() {
   int r = 1;
   try {
     throw;
-    S s;
+    S* s = new S();
   } catch (...) {
     ++r;
   }
