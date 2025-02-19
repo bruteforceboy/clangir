@@ -285,8 +285,10 @@ void CIRGenFunction::emitEHResumeBlock(bool isCleanup,
 mlir::Block *CIRGenFunction::getEHResumeBlock(bool isCleanup,
                                               cir::TryOp tryOp) {
 
-  if (ehResumeBlock)
-    return ehResumeBlock;
+  // if (ehResumeBlock) {
+  //   printf("cached\n");
+  //   return ehResumeBlock;
+  // }
   // Setup unwind.
   assert(tryOp && "expected available cir.try");
   ehResumeBlock = tryOp.getCatchUnwindEntryBlock();
@@ -759,8 +761,10 @@ CIRGenFunction::getEHDispatchBlock(EHScopeStack::stable_iterator si,
 
   // The dispatch block for the end of the scope chain is a block that
   // just resumes unwinding.
-  if (si == EHStack.stable_end())
+  if (si == EHStack.stable_end()) {
+    printf("try resume\n");
     return getEHResumeBlock(true, tryOp);
+  }
 
   // Otherwise, we should look at the actual scope.
   EHScope &scope = *EHStack.find(si);

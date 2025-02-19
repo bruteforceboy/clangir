@@ -124,8 +124,10 @@ LogicalResult OperationVerifier::verifyOnEntrance(Block &block) {
   if (block.empty()) {
     if (mayBeValidWithoutTerminator(&block))
       return success();
+    // block.erase();
+    // return success();
     return emitError(block.getParent()->getLoc(),
-                     "empty block: expect at least a terminator");
+                    "empty block: expect at least a terminator");
   }
 
   // Check each operation, and make sure there are no branches out of the
