@@ -318,6 +318,8 @@ mlir::LogicalResult CIRGenFunction::emitCXXTryStmt(const CXXTryStmt &S) {
     r = emitCXXTryStmtUnderScope(S);
     getBuilder().create<cir::YieldOp>(loc);
   }
+  printf("The scope is\n");
+  s.dump();
   return r;
 }
 
@@ -762,7 +764,6 @@ CIRGenFunction::getEHDispatchBlock(EHScopeStack::stable_iterator si,
   // The dispatch block for the end of the scope chain is a block that
   // just resumes unwinding.
   if (si == EHStack.stable_end()) {
-    printf("try resume\n");
     return getEHResumeBlock(true, tryOp);
   }
 

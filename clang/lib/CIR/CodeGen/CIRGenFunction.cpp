@@ -443,19 +443,20 @@ void CIRGenFunction::LexicalScope::cleanup() {
 
   // An empty non-entry block has nothing to offer, and since this is
   // synthetic, losing information does not affect anything.
-  bool entryBlock = builder.getInsertionBlock()->isEntryBlock();
-  if (!entryBlock && currBlock->empty()) {
-    currBlock->erase();
-    // Remove unused cleanup blocks.
-    if (cleanupBlock && cleanupBlock->hasNoPredecessors())
-      cleanupBlock->erase();
-    // FIXME(cir): ideally we should call applyCleanup() before we
-    // get into this condition and emit the proper cleanup. This is
-    // needed to get nrvo to interop with dtor logic.
-    PerformCleanup = false;
-    removeUnusedRetBlocks();
-    return;
-  }
+  // if (auto* block = builder.getInsertionBlock()) {
+  //   if (!block->isEntryBlock() && currBlock->empty()) {
+  //     currBlock->erase();
+  //     // Remove unused cleanup blocks.
+  //     if (cleanupBlock && cleanupBlock->hasNoPredecessors())
+  //       cleanupBlock->erase();
+  //     // // FIXME(cir): ideally we should call applyCleanup() before we
+  //     // // get into this condition and emit the proper cleanup. This is
+  //     // // needed to get nrvo to interop with dtor logic.
+  //     // PerformCleanup = false;
+  //     removeUnusedRetBlocks();
+  //     return;
+  //   }
+  // }
 
   // If there's a cleanup block, branch to it, nothing else to do.
   if (cleanupBlock) {

@@ -1989,8 +1989,8 @@ void CIRGenFunction::emitCXXConstructorCall(
   // In LLVM: do nothing.
   // In CIR: emit as a regular call, other later passes should lower the
   // ctor call into trivial initialization.
-  if (D->isDefaultConstructor())
-    return;
+  // if (D->isDefaultConstructor())
+  //   return;
   assert(!cir::MissingFeatures::isTrivialCtorOrDtor());
 
   if (isMemcpyEquivalentSpecialMember(D)) {
@@ -2015,8 +2015,7 @@ void CIRGenFunction::emitCXXConstructorCall(
 
   // Emit the call.
   auto CalleePtr = CGM.getAddrOfCXXStructor(GlobalDecl(D, Type));
-  printf("I want to emit the call and the calleeptr is\n");
-  CalleePtr.dump();
+  
   const CIRGenFunctionInfo &Info = CGM.getTypes().arrangeCXXConstructorCall(
       Args, D, Type, ExtraArgs.Prefix, ExtraArgs.Suffix, PassPrototypeArgs);
   CIRGenCallee Callee = CIRGenCallee::forDirect(CalleePtr, GlobalDecl(D, Type));

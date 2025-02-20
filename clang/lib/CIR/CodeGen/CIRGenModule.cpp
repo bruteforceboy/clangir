@@ -2296,11 +2296,9 @@ mlir::Type CIRGenModule::convertType(QualType type) {
 }
 
 bool CIRGenModule::verifyModule() {
-  // printf("verifying the module\n");
   // Verify the module after we have finished constructing it, this will
   // check the structural properties of the IR and invoke any specific
   // verifiers we have on the CIR operations.
-  // theModule.dump();
   return mlir::verify(theModule).succeeded();
   // printf("the verification passed\n");
 }

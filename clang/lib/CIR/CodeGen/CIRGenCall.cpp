@@ -771,11 +771,6 @@ RValue CIRGenFunction::emitCall(const CIRGenFunctionInfo &CallInfo,
   if (auto calleeFnOp = dyn_cast<cir::FuncOp>(CalleePtr))
     FnName = calleeFnOp.getName();
 
-  printf("The function name is\n");
-  llvm::outs() << FnName << "\n";
-  printf("The calleeFnOp is\n");
-  CalleePtr->dump();
-
   cir::CallingConv callingConv;
   cir::SideEffect sideEffect;
   CGM.constructAttributeList(FnName, CallInfo, Callee.getAbstractInfo(), Attrs,
