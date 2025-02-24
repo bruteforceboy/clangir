@@ -285,8 +285,9 @@ void CIRGenFunction::emitEHResumeBlock(bool isCleanup,
 mlir::Block *CIRGenFunction::getEHResumeBlock(bool isCleanup,
                                               cir::TryOp tryOp) {
 
-  if (ehResumeBlock)
+  if (ehResumeBlock) {
     return ehResumeBlock;
+  }
   // Setup unwind.
   assert(tryOp && "expected available cir.try");
   ehResumeBlock = tryOp.getCatchUnwindEntryBlock();
@@ -392,6 +393,17 @@ CIRGenFunction::emitCXXTryStmtUnderScope(const CXXTryStmt &S) {
     {
       // Emit catch clauses.
       exitCXXTryStmt(S);
+    }
+
+    for (auto& reg : tryOp.getCatchRegions()) {
+      SmallVector<mlir::Block *> blocksToDelete;
+      for (auto& blk : reg.getBlocks()) {
+        if (!blk.empty() || !blk.getUses().empty())
+          continue;
+        blocksToDelete.push_back(&blk);
+      }
+      for (auto* b : blocksToDelete)
+        b->erase();
     }
 
     return mlir::success();
