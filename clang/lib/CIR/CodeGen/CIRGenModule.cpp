@@ -2320,6 +2320,8 @@ bool CIRGenModule::verifyModule() {
   // Verify the module after we have finished constructing it, this will
   // check the structural properties of the IR and invoke any specific
   // verifiers we have on the CIR operations.
+  printf("The modulue is\n");
+  theModule.dump();
   return mlir::verify(theModule).succeeded();
 }
 

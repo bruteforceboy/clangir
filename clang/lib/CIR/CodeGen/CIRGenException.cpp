@@ -284,6 +284,7 @@ void CIRGenFunction::emitEHResumeBlock(bool isCleanup,
 
 mlir::Block *CIRGenFunction::getEHResumeBlock(bool isCleanup,
                                               cir::TryOp tryOp) {
+  if (ehResumeBlock) return ehResumeBlock;
   // Setup unwind.
   assert(tryOp && "expected available cir.try");
   ehResumeBlock = tryOp.getCatchUnwindEntryBlock();
@@ -617,6 +618,7 @@ void CIRGenFunction::exitCXXTryStmt(const CXXTryStmt &S, bool IsFnTryBlock) {
 }
 
 mlir::Operation *CIRGenFunction::emitLandingPad(cir::TryOp tryOp) {
+  printf("emitting the landing pad\n");
   assert(EHStack.requiresLandingPad());
   assert(!CGM.getLangOpts().IgnoreExceptions &&
          "LandingPad should not be emitted when -fignore-exceptions are in "
@@ -765,12 +767,14 @@ CIRGenFunction::getEHDispatchBlock(EHScopeStack::stable_iterator si,
 
   mlir::Block *originalBlock = nullptr;
   if (dispatchBlock && tryOp) {
+    printf("yes, in here to connect\n");
     // If the dispatch is cached but comes from a different tryOp, make sure:
     // - Populate current `tryOp` with a new dispatch block regardless.
     // - Update the map to enqueue new dispatchBlock to also get a cleanup. See
     // code at the end of the function.
     mlir::Operation *parentOp = dispatchBlock->getParentOp();
     if (tryOp != parentOp->getParentOfType<cir::TryOp>()) {
+      printf("source\n");
       originalBlock = dispatchBlock;
       dispatchBlock = nullptr;
     }
@@ -800,12 +804,14 @@ CIRGenFunction::getEHDispatchBlock(EHScopeStack::stable_iterator si,
         dispatchBlock = builder.createBlock(&callWithExceptionCtx.getCleanup());
         builder.createYield(callWithExceptionCtx.getLoc());
       } else {
+        printf("general\n");
         // Usually coming from general cir.scope cleanups that aren't
         // tried to a specific throwing call.
         assert(currLexScope && currLexScope->isRegular() &&
                "expected regular cleanup");
         dispatchBlock = currLexScope->getOrCreateCleanupBlock(builder);
         if (dispatchBlock->empty()) {
+          printf("adding yield\n");
           mlir::OpBuilder::InsertionGuard guard(builder);
           builder.setInsertionPointToEnd(dispatchBlock);
           mlir::Location loc =
@@ -826,12 +832,20 @@ CIRGenFunction::getEHDispatchBlock(EHScopeStack::stable_iterator si,
     }
   }
 
+  // scope.setLastEHDispatchBlock(dispatchBlock);
+  // printf("size of cleanup to patch %d\n", cleanupsToPatch.size());
+  
   if (originalBlock) {
     // As mentioned above: update the map to enqueue new dispatchBlock to also
     // get a cleanup.
+    printf("adding an original block\n");
     cleanupsToPatch[originalBlock] = dispatchBlock;
+    theCleanups[originalBlock].push_back(dispatchBlock);
+    cleanupsToPatchCount[originalBlock]++;
+    printf("the cleanups that I have to patch is %d\n", cleanupsToPatchCount[originalBlock]);
     dispatchBlock = originalBlock;
   } else {
+    printf("first timer\n");
     scope.setCachedEHDispatchBlock(dispatchBlock);
   }
   return dispatchBlock;

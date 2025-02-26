@@ -1929,6 +1929,8 @@ public:
   /// Unified block containing a call to cir.resume
   mlir::Block *ehResumeBlock = nullptr;
   llvm::DenseMap<mlir::Block *, mlir::Block *> cleanupsToPatch;
+  llvm::DenseMap<mlir::Block *, int> cleanupsToPatchCount;
+  llvm::DenseMap<mlir::Block *, llvm::SmallVector<mlir::Block*>> theCleanups;
 
   /// The cleanup depth enclosing all the cleanups associated with the
   /// parameters.

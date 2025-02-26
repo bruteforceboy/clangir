@@ -612,6 +612,7 @@ void CIRGenFunction::PopCleanupBlock(bool FallthroughIsBranchThrough) {
 
   // Emit the EH cleanup if required.
   if (RequiresEHCleanup) {
+    printf("requires eh cleanup\n");
     cir::TryOp tryOp = ehEntry->getParentOp()->getParentOfType<cir::TryOp>();
     auto *nextAction = getEHDispatchBlock(EHParent, tryOp);
     (void)nextAction;
@@ -650,6 +651,7 @@ void CIRGenFunction::PopCleanupBlock(bool FallthroughIsBranchThrough) {
     if (CPI)
       llvm_unreachable("NYI");
     else {
+      printf("inside of the else statement\n");
       // In LLVM traditional codegen, here's where it branches off to
       // nextAction. CIR does not have a flat layout at this point, so
       // instead patch all the landing pads that need to run this cleanup
@@ -657,24 +659,36 @@ void CIRGenFunction::PopCleanupBlock(bool FallthroughIsBranchThrough) {
       mlir::Block *currBlock = ehEntry;
       while (currBlock && cleanupsToPatch.contains(currBlock)) {
         mlir::OpBuilder::InsertionGuard guard(builder);
-        mlir::Block *blockToPatch = cleanupsToPatch[currBlock];
-        auto currYield = cast<YieldOp>(blockToPatch->getTerminator());
-        builder.setInsertionPoint(currYield);
+        mlir::Block *blockToPatch = nullptr;
+        for (auto& blk : theCleanups[currBlock]) {
+          blockToPatch = blk;
+          if (auto prev = blockToPatch->getSinglePredecessor())
+            blockToPatch = prev;
+          printf("there is a block to patch here\n");
+          blockToPatch->dump();
+          auto currYield = cast<YieldOp>(blockToPatch->getTerminator());
+          builder.setInsertionPoint(currYield);
 
-        // If nextAction is an EH resume block, also update all try locations
-        // for these "to-patch" blocks with the appropriate resume content.
-        if (nextAction == ehResumeBlock) {
-          if (auto tryToPatch =
-                  currYield->getParentOp()->getParentOfType<cir::TryOp>()) {
-            mlir::Block *resumeBlockToPatch =
-                tryToPatch.getCatchUnwindEntryBlock();
-            emitEHResumeBlock(/*isCleanup=*/true, resumeBlockToPatch,
-                              tryToPatch.getLoc());
+          // If nextAction is an EH resume block, also update all try locations
+          // for these "to-patch" blocks with the appropriate resume content.
+          if (nextAction == ehResumeBlock) {
+            if (auto tryToPatch =
+                    currYield->getParentOp()->getParentOfType<cir::TryOp>()) {
+              printf("yes, try patch\n");
+              mlir::Block *resumeBlockToPatch =
+                  tryToPatch.getCatchUnwindEntryBlock();
+              emitEHResumeBlock(/*isCleanup=*/true, resumeBlockToPatch,
+                                tryToPatch.getLoc());
+            }
           }
-        }
 
-        emitCleanup(*this, Fn, cleanupFlags, EHActiveFlag);
+          emitCleanup(*this, Fn, cleanupFlags, EHActiveFlag);
+        }
         currBlock = blockToPatch;
+        printf("linking the next patch\n");
+        assert(currBlock);
+        printf("cleanupsToPatch size %d\n", cleanupsToPatch.size());
+        // assert(cleanupsToPatch.contains(currBlock));
       }
 
       // The nextAction is yet to be populated, register that this

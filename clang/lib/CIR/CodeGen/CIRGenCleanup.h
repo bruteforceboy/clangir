@@ -39,6 +39,7 @@ struct CatchTypeInfo {
 class EHScope {
   mlir::Operation *CachedLandingPad;
   mlir::Block *CachedEHDispatchBlock;
+  mlir::Block *lastEHDispatchBlock;
 
   EHScopeStack::stable_iterator EnclosingEHScope;
 
@@ -102,6 +103,7 @@ public:
 
   EHScope(Kind kind, EHScopeStack::stable_iterator enclosingEHScope)
       : CachedLandingPad(nullptr), CachedEHDispatchBlock(nullptr),
+      lastEHDispatchBlock(nullptr),
         EnclosingEHScope(enclosingEHScope) {
     CommonBits.Kind = kind;
   }
@@ -118,6 +120,15 @@ public:
 
   void setCachedEHDispatchBlock(mlir::Block *block) {
     CachedEHDispatchBlock = block;
+  }
+
+  mlir::Block *getLastEHDispatchBlock() const {
+    return lastEHDispatchBlock;
+  }
+
+  void setLastEHDispatchBlock(mlir::Block *block) {
+    printf("setting\n");
+    lastEHDispatchBlock = block;
   }
 
   bool hasEHBranches() const {
