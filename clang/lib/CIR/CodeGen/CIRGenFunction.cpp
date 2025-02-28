@@ -459,6 +459,11 @@ void CIRGenFunction::LexicalScope::cleanup() {
 
   // If there's a cleanup block, branch to it, nothing else to do.
   if (cleanupBlock) {
+    if (cleanupBlock->hasNoPredecessors()) {
+      cleanupBlock->erase();
+      builder.create<ReturnOp>(currBlock->back().getLoc());
+      return;
+    }
     builder.create<BrOp>(currBlock->back().getLoc(), cleanupBlock);
     return;
   }
