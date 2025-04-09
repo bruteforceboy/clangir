@@ -307,6 +307,7 @@ static void emitCleanup(CIRGenFunction &CGF, EHScopeStack::Cleanup *Fn,
   auto emitCleanup = [&]() {
     // Ask the cleanup to emit itself.
     assert(CGF.HaveInsertPoint() && "expected insertion point");
+    printf("the cleanup is\n");
     Fn->Emit(CGF, flags);
     assert(CGF.HaveInsertPoint() && "cleanup ended with no insertion point?");
   };
@@ -612,8 +613,18 @@ void CIRGenFunction::PopCleanupBlock(bool FallthroughIsBranchThrough) {
 
   // Emit the EH cleanup if required.
   if (RequiresEHCleanup) {
+    // CGF.currLexScope->getClosestTryParent()
+    // cir::TryOp tryOp = currLexScope->getClosestTryParent();
+    printf("The ehEntry is\n");
+    ehEntry->dump();
     cir::TryOp tryOp = ehEntry->getParentOp()->getParentOfType<cir::TryOp>();
-    auto *nextAction = getEHDispatchBlock(EHParent, tryOp);
+    // if (!tryOp)
+    //   return;
+
+    mlir::Block* nextAction = nullptr;
+    if (tryOp)
+      nextAction = getEHDispatchBlock(EHParent, tryOp); 
+    // auto *nextAction = getEHDispatchBlock(EHParent, tryOp);
     (void)nextAction;
 
     // Push a terminate scope or cleanupendpad scope around the potentially
@@ -638,7 +649,7 @@ void CIRGenFunction::PopCleanupBlock(bool FallthroughIsBranchThrough) {
 
     // We only actually emit the cleanup code if the cleanup is either
     // active or was used before it was deactivated.
-    if (EHActiveFlag.isValid() || IsActive) {
+    if (tryOp && (EHActiveFlag.isValid() || IsActive)) {
       cleanupFlags.setIsForEHCleanup();
       mlir::OpBuilder::InsertionGuard guard(builder);
 
@@ -676,6 +687,9 @@ void CIRGenFunction::PopCleanupBlock(bool FallthroughIsBranchThrough) {
         }
 
         emitCleanup(*this, Fn, cleanupFlags, EHActiveFlag);
+        printf("the curr block is\n");
+        currBlock->dump();
+        printf("emitting cleanup\n");
         currBlock = blockToPatch;
       }
 
@@ -686,8 +700,9 @@ void CIRGenFunction::PopCleanupBlock(bool FallthroughIsBranchThrough) {
     }
 
     // Leave the terminate scope.
-    if (PushedTerminate)
+    if (PushedTerminate) {
       EHStack.popTerminate();
+    }
 
     // FIXME(cir): LLVM traditional codegen tries to simplify some of the
     // codegen here. Once we are further down with EH support revisit whether we

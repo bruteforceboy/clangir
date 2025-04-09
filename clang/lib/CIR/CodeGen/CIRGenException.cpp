@@ -760,8 +760,11 @@ CIRGenFunction::getEHDispatchBlock(EHScopeStack::stable_iterator si,
 
   // The dispatch block for the end of the scope chain is a block that
   // just resumes unwinding.
-  if (si == EHStack.stable_end())
+  if (si == EHStack.stable_end()) {
+    if (!tryOp)
+      return nullptr;
     return getEHResumeBlock(true, tryOp);
+  }
 
   // Otherwise, we should look at the actual scope.
   EHScope &scope = *EHStack.find(si);
