@@ -639,12 +639,14 @@ void CIRGenFunction::PopCleanupBlock(bool FallthroughIsBranchThrough) {
     // We only actually emit the cleanup code if the cleanup is either
     // active or was used before it was deactivated.
     if (EHActiveFlag.isValid() || IsActive) {
-      cleanupFlags.setIsForEHCleanup();
-      mlir::OpBuilder::InsertionGuard guard(builder);
+      if (nextAction) {
+        cleanupFlags.setIsForEHCleanup();
+        mlir::OpBuilder::InsertionGuard guard(builder);
 
-      auto yield = cast<YieldOp>(ehEntry->getTerminator());
-      builder.setInsertionPoint(yield);
-      emitCleanup(*this, Fn, cleanupFlags, EHActiveFlag);
+        auto yield = cast<YieldOp>(ehEntry->getTerminator());
+        builder.setInsertionPoint(yield);
+        emitCleanup(*this, Fn, cleanupFlags, EHActiveFlag);
+      }
     }
 
     if (CPI)
