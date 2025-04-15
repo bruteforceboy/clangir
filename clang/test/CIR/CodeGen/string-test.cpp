@@ -1,5 +1,5 @@
 // RUN: %clang -target x86_64-unknown-linux-gnu -fclangir -fno-PIE -S -Xclang -emit-cir %s -o %t1.cir
-// RUN: %clang -target x86_64-unknown-linux-gnu -fclangir -fno-PIE -S -Xclang -emit-llvm %s -o %t1.ll=
+// RUN: %clang -target x86_64-unknown-linux-gnu -fclangir -fno-PIE -S -Xclang -emit-llvm %s -o %t1.ll
 
 #include <string>
 
