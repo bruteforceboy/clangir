@@ -613,8 +613,12 @@ void CIRGenFunction::PopCleanupBlock(bool FallthroughIsBranchThrough) {
   // Emit the EH cleanup if required.
   if (RequiresEHCleanup) {
     cir::TryOp tryOp = ehEntry->getParentOp()->getParentOfType<cir::TryOp>();
-    auto *nextAction = getEHDispatchBlock(EHParent, tryOp);
-    (void)nextAction;
+    mlir::Block *nextAction = nullptr;
+
+    if (!tryOp && EHParent == EHStack.stable_end())
+      IsActive = false;
+    else
+      nextAction = getEHDispatchBlock(EHParent, tryOp);
 
     // Push a terminate scope or cleanupendpad scope around the potentially
     // throwing cleanups. For funclet EH personalities, the cleanupendpad models
