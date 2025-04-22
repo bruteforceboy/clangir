@@ -1475,6 +1475,7 @@ public:
       // If we should perform a cleanup, force them now.  Note that
       // this ends the cleanup scope before rescoping any labels.
       cleanup();
+      printf("after cleanup %d\n", EntryBlock->mightHaveTerminator());
       restore();
     }
 

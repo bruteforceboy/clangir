@@ -2377,12 +2377,35 @@ mlir::Value ScalarExprEmitter::VisitExprWithCleanups(ExprWithCleanups *E) {
       [&](mlir::OpBuilder &b, mlir::Type &yieldTy, mlir::Location loc) {
         CIRGenFunction::LexicalScope lexScope{CGF, loc,
                                               builder.getInsertionBlock()};
+        auto addr1 = (uint64_t)builder.getInsertionBlock();
+        printf("check1, %d\n", builder.getInsertionBlock()->empty());
+
         auto scopeYieldVal = Visit(E->getSubExpr());
         if (scopeYieldVal) {
-          builder.create<cir::YieldOp>(loc, scopeYieldVal);
+          lexScope.ForceCleanup();
+          auto op = builder.create<cir::YieldOp>(loc, scopeYieldVal);
           yieldTy = scopeYieldVal.getType();
-        }
+          auto* blk = op->getBlock();
+          auto addr2 = (uint64_t)blk;
+          if (addr1 != addr2)
+            printf("ALARM!!!!\n");
+          
+          for (auto& o : *blk) 
+            o.dump();
+        
+          printf("check2 %d\n", blk->mightHaveTerminator() );
+        } 
+        auto* blk = builder.getInsertionBlock();
+        printf("before lexical scope cleanup: %d\n", blk->mightHaveTerminator() );
       });
+
+      printf("After scope built\n");
+      for (auto& blk : scope.getScopeRegion()) {
+        for (auto& o : blk) 
+            o.dump();
+      }
+
+  scope.dump();
 
   // Defend against dominance problems caused by jumps out of expression
   // evaluation through the shared cleanup block.

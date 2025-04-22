@@ -441,8 +441,14 @@ void CIRGenFunction::LexicalScope::cleanup() {
   auto *currBlock = builder.getBlock();
   if (isGlobalInit() && !currBlock)
     return;
-  if (currBlock->mightHaveTerminator() && currBlock->getTerminator())
+
+  printf("lexical scope cleanup\n");
+  printf("  %d\n", currBlock->mightHaveTerminator());
+  if (currBlock->mightHaveTerminator() && currBlock->getTerminator()) {
+    printf("return ok\n");
+    currBlock->getTerminator()->dump();
     return;
+  }
 
   // An empty non-entry block has nothing to offer, and since this is
   // synthetic, losing information does not affect anything.
