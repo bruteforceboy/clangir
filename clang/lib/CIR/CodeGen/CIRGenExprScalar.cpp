@@ -2658,8 +2658,6 @@ mlir::Value ScalarExprEmitter::VisitBinLAnd(const clang::BinaryOperator *E) {
   auto ResOp = Builder.create<cir::TernaryOp>(
       Loc, LHSCondV, /*trueBuilder=*/
       [&](mlir::OpBuilder &B, mlir::Location Loc) {
-        CIRGenFunction::LexicalScope LexScope{CGF, Loc, B.getInsertionBlock()};
-        CGF.currLexScope->setAsTernary();
         mlir::Value RHSCondV = CGF.evaluateExprAsBool(E->getRHS());
         auto res = B.create<cir::TernaryOp>(
             Loc, RHSCondV, /*trueBuilder*/
@@ -2735,8 +2733,6 @@ mlir::Value ScalarExprEmitter::VisitBinLOr(const clang::BinaryOperator *E) {
       },
       /*falseBuilder*/
       [&](mlir::OpBuilder &B, mlir::Location Loc) {
-        CIRGenFunction::LexicalScope LexScope{CGF, Loc, B.getInsertionBlock()};
-        CGF.currLexScope->setAsTernary();
         mlir::Value RHSCondV = CGF.evaluateExprAsBool(E->getRHS());
         auto res = B.create<cir::TernaryOp>(
             Loc, RHSCondV, /*trueBuilder*/
