@@ -371,6 +371,7 @@ void CIRGenFunction::LexicalScope::cleanup() {
     // If we now have one after `applyCleanup`, hook it up properly.
     if (!cleanupBlock && localScope->getCleanupBlock(builder)) {
       cleanupBlock = localScope->getCleanupBlock(builder);
+      // printf("creating a break op\n");
       builder.create<BrOp>(insPt->back().getLoc(), cleanupBlock);
       if (!cleanupBlock->mightHaveTerminator()) {
         mlir::OpBuilder::InsertionGuard guard(builder);
@@ -407,6 +408,8 @@ void CIRGenFunction::LexicalScope::cleanup() {
       emitImplicitReturn();
       return;
     }
+
+    // printf("is ternary %d\n", localScope->isTernary());
 
     // End of any local scope != function
     // Ternary ops have to deal with matching arms for yielding types

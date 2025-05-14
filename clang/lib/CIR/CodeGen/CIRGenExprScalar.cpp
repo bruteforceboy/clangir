@@ -2658,6 +2658,8 @@ mlir::Value ScalarExprEmitter::VisitBinLAnd(const clang::BinaryOperator *E) {
   auto ResOp = Builder.create<cir::TernaryOp>(
       Loc, LHSCondV, /*trueBuilder=*/
       [&](mlir::OpBuilder &B, mlir::Location Loc) {
+        CIRGenFunction::LexicalScope lexScope{CGF, Loc, B.getInsertionBlock()};
+        CGF.currLexScope->setAsTernary();
         mlir::Value RHSCondV = CGF.evaluateExprAsBool(E->getRHS());
         auto res = B.create<cir::TernaryOp>(
             Loc, RHSCondV, /*trueBuilder*/
@@ -2676,6 +2678,7 @@ mlir::Value ScalarExprEmitter::VisitBinLAnd(const clang::BinaryOperator *E) {
               auto res = b.create<cir::ConstantOp>(Loc, Builder.getFalseAttr());
               b.create<cir::YieldOp>(Loc, res.getRes());
             });
+        lexScope.ForceCleanup();
         B.create<cir::YieldOp>(Loc, res.getResult());
       },
       /*falseBuilder*/
@@ -2733,6 +2736,8 @@ mlir::Value ScalarExprEmitter::VisitBinLOr(const clang::BinaryOperator *E) {
       },
       /*falseBuilder*/
       [&](mlir::OpBuilder &B, mlir::Location Loc) {
+        CIRGenFunction::LexicalScope lexScope{CGF, Loc, B.getInsertionBlock()};
+        CGF.currLexScope->setAsTernary();
         mlir::Value RHSCondV = CGF.evaluateExprAsBool(E->getRHS());
         auto res = B.create<cir::TernaryOp>(
             Loc, RHSCondV, /*trueBuilder*/
@@ -2753,7 +2758,7 @@ mlir::Value ScalarExprEmitter::VisitBinLOr(const clang::BinaryOperator *E) {
               B.create<cir::YieldOp>(Loc, res.getRes());
             },
             /*falseBuilder*/
-            [&](mlir::OpBuilder &b, mlir::Location Loc) {
+            [&](mlir::OpBuilder &B, mlir::Location Loc) {
               SmallVector<mlir::Location, 2> Locs;
               if (mlir::isa<mlir::FileLineColLoc>(Loc)) {
                 Locs.push_back(Loc);
@@ -2766,9 +2771,10 @@ mlir::Value ScalarExprEmitter::VisitBinLOr(const clang::BinaryOperator *E) {
               CIRGenFunction::LexicalScope lexScope{CGF, Loc,
                                                     B.getInsertionBlock()};
               CGF.currLexScope->setAsTernary();
-              auto res = b.create<cir::ConstantOp>(Loc, Builder.getFalseAttr());
-              b.create<cir::YieldOp>(Loc, res.getRes());
+              auto res = B.create<cir::ConstantOp>(Loc, Builder.getFalseAttr());
+              B.create<cir::YieldOp>(Loc, res.getRes());
             });
+        lexScope.ForceCleanup();
         B.create<cir::YieldOp>(Loc, res.getResult());
       });
 

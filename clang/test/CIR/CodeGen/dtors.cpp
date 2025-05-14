@@ -123,3 +123,12 @@ void m() { G l(j); }
 // CHECK:   } : !s64i
 // CHECK:   cir.trap
 // CHECK: }
+
+struct X {
+  int a;
+  X(int a) : a(a) {}
+  ~X() {}
+};
+
+bool foo(const X &) { return true; }
+bool bar() { return foo(1) || foo(2); }
