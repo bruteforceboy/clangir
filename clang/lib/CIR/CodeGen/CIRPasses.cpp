@@ -84,6 +84,8 @@ mlir::LogicalResult runCIRToCIRPasses(
   if (emitCore)
     pm.addPass(mlir::createSCFPreparePass());
 
+  pm.addPass(mlir::createHoistVectorAllocasPass());
+
   // FIXME: once CIRCodenAction fixes emission other than CIR we
   // need to run this right before dialect emission.
   pm.addPass(mlir::createDropASTPass());

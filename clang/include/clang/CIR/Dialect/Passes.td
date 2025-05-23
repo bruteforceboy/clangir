@@ -191,4 +191,13 @@ def CallConvLowering : Pass<"cir-call-conv-lowering"> {
   let dependentDialects = ["cir::CIRDialect"];
 }
 
+def HoistVectorAllocas : Pass<"cir-hoist-vector-allocas"> {
+  let summary = "Hoist vector allocas to the entry of the function";
+  let description = [{
+    Hoist vector allocas to the entry of the function
+  }];
+  let constructor = "mlir::createHoistVectorAllocasPass()";
+  let dependentDialects = ["cir::CIRDialect"];
+}
+
 #endif // MLIR_DIALECT_CIR_PASSES

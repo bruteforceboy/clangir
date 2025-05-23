@@ -39,6 +39,7 @@ std::unique_ptr<Pass> createLibOptPass(clang::ASTContext *astCtx);
 std::unique_ptr<Pass> createFlattenCFGPass();
 std::unique_ptr<Pass> createHoistAllocasPass();
 std::unique_ptr<Pass> createGotoSolverPass();
+std::unique_ptr<Pass> createHoistVectorAllocasPass();
 
 /// Create a pass to lower ABI-independent function definitions/calls.
 std::unique_ptr<Pass> createCallConvLoweringPass();
