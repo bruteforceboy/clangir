@@ -97,7 +97,9 @@ bool allocaHasNoUse(mlir::Value alloca) {
 bool hoisted(mlir::Value alloca) {
   for (auto user : alloca.getUsers())
     if (auto call = dyn_cast<cir::CallOp>(user))
-      if (call.getCallee()->str() == HoistVectorAllocasPass::vectorClear)
+      if (alloca.getDefiningOp()->getParentOp() !=
+              call.getOperation()->getParentOp() &&
+          call.getCallee()->str() == HoistVectorAllocasPass::vectorClear)
         return true;
 
   return false;
@@ -118,6 +120,7 @@ void insertVectorClear(mlir::OpBuilder &rewriter, mlir::Value alloca,
 
 void moveToOuterScope(mlir::OpBuilder &rewriter, cir::CallOp constructorCall,
                       cir::FuncOp clearFn) {
+
   auto alloca = constructorCall.getArgOperand(0);
   auto destructorCall = getMatchingDestructorCall(constructorCall, alloca);
   auto outerScope = getOuterScope(constructorCall);
@@ -134,7 +137,6 @@ void moveToOuterScope(mlir::OpBuilder &rewriter, cir::CallOp constructorCall,
 }
 
 // Attempts to reconstruct the original .clear() function as a runtime function.
-// Not sure if this links properly
 FuncOp buildRuntimeFunction(mlir::OpBuilder &builder, llvm::StringRef name,
                             mlir::Location loc, cir::FuncType type,
                             cir::GlobalLinkageKind linkage,
@@ -173,7 +175,7 @@ void HoistVectorAllocasPass::runOnOperation() {
                            cir::VoidType::get(rewriter.getContext()));
     FuncOp clearFn = buildRuntimeFunction(
         rewriter, HoistVectorAllocasPass::vectorClear, theModule.getLoc(),
-        fnType, cir::GlobalLinkageKind::ExternalLinkage, theModule);
+        fnType, cir::GlobalLinkageKind::ExternalWeakLinkage, theModule);
 
     for (auto &call : callsToRewrite)
       moveToOuterScope(rewriter, call, clearFn);
