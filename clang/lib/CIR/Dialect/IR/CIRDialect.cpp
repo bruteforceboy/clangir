@@ -1558,11 +1558,17 @@ void cir::TernaryOp::build(
   Region *trueRegion = result.addRegion();
   auto *block = builder.createBlock(trueRegion);
   trueBuilder(builder, result.location);
+  block = &trueRegion->back();
   Region *falseRegion = result.addRegion();
   builder.createBlock(falseRegion);
   falseBuilder(builder, result.location);
+    
+
+  block->dump();
+  block->getTerminator()->dump();
 
   auto yield = dyn_cast<YieldOp>(block->getTerminator());
+  assert(yield);
   assert((yield && yield.getNumOperands() <= 1) &&
          "expected zero or one result type");
   if (yield.getNumOperands() == 1)
