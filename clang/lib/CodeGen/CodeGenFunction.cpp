@@ -1400,7 +1400,8 @@ static void TryMarkNoThrow(llvm::Function *F) {
     for (llvm::Instruction &I : BB)
       if (I.mayThrow())
         return;
-
+  
+  printf("the function does not throw\n");
   F->setDoesNotThrow();
 }
 

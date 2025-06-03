@@ -2393,6 +2393,8 @@ void CodeGenModule::ConstructAttributeList(StringRef Name,
 
   const Decl *TargetDecl = CalleeInfo.getCalleeDecl().getDecl();
 
+  llvm::outs() << "Call name: " << Name << " has nothrow: " << TargetDecl->hasAttr<NoThrowAttr>() << "\n";
+
   // Attach assumption attributes to the declaration. If this is a call
   // site, attach assumptions from the caller to the call as well.
   AddAttributesFromOMPAssumes(FuncAttrs, TargetDecl);
@@ -2459,17 +2461,20 @@ void CodeGenModule::ConstructAttributeList(StringRef Name,
 
     // 'const', 'pure' and 'noalias' attributed functions are also nounwind.
     if (TargetDecl->hasAttr<ConstAttr>()) {
+      llvm::outs() << "call name: " << Name << " has a constant attribute" << "\n";
       FuncAttrs.addMemoryAttr(llvm::MemoryEffects::none());
       FuncAttrs.addAttribute(llvm::Attribute::NoUnwind);
       // gcc specifies that 'const' functions have greater restrictions than
       // 'pure' functions, so they also cannot have infinite loops.
       FuncAttrs.addAttribute(llvm::Attribute::WillReturn);
     } else if (TargetDecl->hasAttr<PureAttr>()) {
+      llvm::outs() << "call name: " << Name << " has a PureAttr attribute" << "\n";
       FuncAttrs.addMemoryAttr(llvm::MemoryEffects::readOnly());
       FuncAttrs.addAttribute(llvm::Attribute::NoUnwind);
       // gcc specifies that 'pure' functions cannot have infinite loops.
       FuncAttrs.addAttribute(llvm::Attribute::WillReturn);
     } else if (TargetDecl->hasAttr<NoAliasAttr>()) {
+      llvm::outs() << "call name: " << Name << " has a noalias attribute" << "\n";
       FuncAttrs.addMemoryAttr(llvm::MemoryEffects::inaccessibleOrArgMemOnly());
       FuncAttrs.addAttribute(llvm::Attribute::NoUnwind);
     }
@@ -4878,6 +4883,8 @@ llvm::CallInst *
 CodeGenFunction::EmitNounwindRuntimeCall(llvm::FunctionCallee callee,
                                          ArrayRef<Address> args,
                                          const llvm::Twine &name) {
+  printf("no unwind runtime call\n");
+  llvm::outs() << "call name: " << name << "\n";
   SmallVector<llvm::Value *, 3> values;
   for (auto arg : args)
     values.push_back(arg.emitRawPointer(*this));
@@ -5780,13 +5787,22 @@ RValue CodeGenFunction::EmitCall(const CGFunctionInfo &CallInfo,
     // We don't need to model anything in IR to get this behavior.
     CannotThrow = true;
   } else {
+    printf("in here\n");
+    llvm::outs() << "call name: " << CalleePtr->getName() << "\n";
     // Otherwise, nounwind call sites will never throw.
     CannotThrow = Attrs.hasFnAttr(llvm::Attribute::NoUnwind);
+    printf("cannot throw now %d\n", CannotThrow);
 
     if (auto *FPtr = dyn_cast<llvm::Function>(CalleePtr))
-      if (FPtr->hasFnAttribute(llvm::Attribute::NoUnwind))
+      if (FPtr->hasFnAttribute(llvm::Attribute::NoUnwind)) {
+        printf("yes\n");
+        FPtr->dump();
         CannotThrow = true;
+      }
   }
+
+  printf("cannot throw %d\n", CannotThrow);
+  llvm::outs() << "call name: " << CalleePtr->getName() << "\n";
 
   // If we made a temporary, be sure to clean up after ourselves. Note that we
   // can't depend on being inside of an ExprWithCleanups, so we need to manually

@@ -3613,6 +3613,7 @@ static void emitCheckHandlerCall(CodeGenFunction &CGF,
 
   llvm::AttrBuilder B(CGF.getLLVMContext());
   if (!MayReturn) {
+    printf("not may return\n");
     B.addAttribute(llvm::Attribute::NoReturn)
         .addAttribute(llvm::Attribute::NoUnwind);
   }
@@ -3624,6 +3625,8 @@ static void emitCheckHandlerCall(CodeGenFunction &CGF,
                                llvm::AttributeList::FunctionIndex, B),
       /*Local=*/true);
   llvm::CallInst *HandlerCall = CGF.EmitNounwindRuntimeCall(Fn, FnArgs);
+  printf("the handler call is\n");
+  HandlerCall->dump();
   NoMerge = NoMerge || !CGF.CGM.getCodeGenOpts().OptimizationLevel ||
             (CGF.CurCodeDecl && CGF.CurCodeDecl->hasAttr<OptimizeNoneAttr>());
   if (NoMerge)

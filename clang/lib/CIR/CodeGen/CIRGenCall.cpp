@@ -188,6 +188,7 @@ void CIRGenModule::constructAttributeList(
     StringRef Name, const CIRGenFunctionInfo &FI, CIRGenCalleeInfo CalleeInfo,
     mlir::NamedAttrList &funcAttrs, cir::CallingConv &callingConv,
     cir::SideEffect &sideEffect, bool AttrOnCallSite, bool IsThunk) {
+  llvm::outs() << "The name is: " << Name << "\n";
   // Implementation Disclaimer
   //
   // UnimplementedFeature and asserts are used throughout the code to track
@@ -209,6 +210,8 @@ void CIRGenModule::constructAttributeList(
                                      CalleeInfo.getCalleeFunctionProtoType());
 
   const Decl *TargetDecl = CalleeInfo.getCalleeDecl().getDecl();
+
+  TargetDecl->dump();
 
   // TODO(cir): Attach assumption attributes to the declaration. If this is a
   // call site, attach assumptions from the caller to the call as well.
@@ -600,12 +603,15 @@ RValue CIRGenFunction::emitCall(const CIRGenFunctionInfo &CallInfo,
     auto noThrowAttr = cir::NoThrowAttr::get(&getMLIRContext());
     CannotThrow = Attrs.getNamed(noThrowAttr.getMnemonic()).has_value();
 
-    if (auto fptr = dyn_cast<cir::FuncOp>(CalleePtr))
+    if (auto fptr = dyn_cast<cir::FuncOp>(CalleePtr)) {
+      fptr.dump();
       if (fptr.getExtraAttrs().getElements().contains(
               noThrowAttr.getMnemonic()))
         CannotThrow = true;
+    }
   }
   bool isInvoke = CannotThrow ? false : isInvokeDest();
+  printf("Cannot throw %d\n", CannotThrow);
 
   // TODO: UnusedReturnSizePtr
   if (const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(CurFuncDecl))
@@ -643,6 +649,9 @@ RValue CIRGenFunction::emitCall(const CIRGenFunctionInfo &CallInfo,
 
     auto extraFnAttrs = cir::ExtraFuncAttributesAttr::get(
         Attrs.getDictionary(&getMLIRContext()));
+
+    printf("is invoke %d\n", isInvoke);
+    directFuncOp.dump();
 
     cir::CIRCallOpInterface callLikeOp = emitCallLikeOp(
         *this, callLoc, indirectFuncTy, indirectFuncVal, directFuncOp,

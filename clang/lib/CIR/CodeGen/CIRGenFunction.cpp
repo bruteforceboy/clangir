@@ -633,6 +633,33 @@ static void eraseEmptyAndUnusedBlocks(cir::FuncOp fnOp) {
     b->erase();
 }
 
+/// Tries to mark the given function nounwind based on the
+/// non-existence of any throwing calls within it.  We believe this is
+/// lightweight enough to do at -O0.
+void CIRGenFunction::TryMarkNoThrow(cir::FuncOp fn) {
+  // LLVM treats 'nounwind' on a function as part of the type, so we
+  // can't do this on functions that can be overwritten.
+
+  // if (F->isInterposable()) return; (TODO)
+
+  auto noThrowAttr = cir::NoThrowAttr::get(&getMLIRContext());
+
+  for (auto &blk : fn.getBlocks())
+    for (auto &op : blk.getOperations())
+      if (auto callOp = dyn_cast<cir::CallOp>(op))
+        if (!callOp.getExtraAttrs().getElements().contains(noThrowAttr.getMnemonic())) {
+          printf("yes, found one of the functions\n"); 
+         return;
+        }
+  
+  printf("marking as no throw\n");
+  mlir::NamedAttrList extraAttrs{fn.getExtraAttrs().getElements().getValue()};;
+  extraAttrs.set(noThrowAttr.getMnemonic(), noThrowAttr);
+  fn.setExtraAttrsAttr(
+      cir::ExtraFuncAttributesAttr::get(extraAttrs.getDictionary(&getMLIRContext())));
+  fn.dump();
+}
+
 cir::FuncOp CIRGenFunction::generateCode(clang::GlobalDecl gd, cir::FuncOp fn,
                                          const CIRGenFunctionInfo &fnInfo) {
   assert(fn && "generating code for a null function");
@@ -779,7 +806,9 @@ cir::FuncOp CIRGenFunction::generateCode(clang::GlobalDecl gd, cir::FuncOp fn,
 
     // If we haven't marked the function nothrow through other means, do a quick
     // pass now to see if we can.
-    assert(!cir::MissingFeatures::tryMarkNoThrow());
+    // assert(!cir::MissingFeatures::tryMarkNoThrow());
+    printf("try mark no throw\n");
+    TryMarkNoThrow(fn);
   }
 
   eraseEmptyAndUnusedBlocks(fn);

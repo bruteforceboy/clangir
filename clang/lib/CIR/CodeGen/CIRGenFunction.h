@@ -829,6 +829,8 @@ public:
   cir::FuncOp generateCode(clang::GlobalDecl GD, cir::FuncOp Fn,
                            const CIRGenFunctionInfo &FnInfo);
 
+  void TryMarkNoThrow(cir::FuncOp fn);
+
   clang::QualType buildFunctionArgList(clang::GlobalDecl GD,
                                        FunctionArgList &Args);
   struct AutoVarEmission {

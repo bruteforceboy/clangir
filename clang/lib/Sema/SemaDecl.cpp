@@ -16887,8 +16887,10 @@ void Sema::AddKnownFunctionAttributes(FunctionDecl *FD) {
         !FD->hasAttr<ReturnsTwiceAttr>())
       FD->addAttr(ReturnsTwiceAttr::CreateImplicit(Context,
                                          FD->getLocation()));
-    if (Context.BuiltinInfo.isNoThrow(BuiltinID) && !FD->hasAttr<NoThrowAttr>())
+    if (Context.BuiltinInfo.isNoThrow(BuiltinID) && !FD->hasAttr<NoThrowAttr>()) {
+      printf("adding no throw\n");
       FD->addAttr(NoThrowAttr::CreateImplicit(Context, FD->getLocation()));
+    }
     if (Context.BuiltinInfo.isPure(BuiltinID) && !FD->hasAttr<PureAttr>())
       FD->addAttr(PureAttr::CreateImplicit(Context, FD->getLocation()));
     if (Context.BuiltinInfo.isConst(BuiltinID) && !FD->hasAttr<ConstAttr>())

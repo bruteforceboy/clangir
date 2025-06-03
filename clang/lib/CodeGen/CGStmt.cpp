@@ -2562,8 +2562,10 @@ static void UpdateAsmCallInst(llvm::CallBase &Result, bool HasSideEffect,
                               const std::vector<llvm::Type *> &ArgElemTypes,
                               CodeGenFunction &CGF,
                               std::vector<llvm::Value *> &RegResults) {
-  if (!HasUnwindClobber)
+  if (!HasUnwindClobber) {
+    printf("here adding the function attribute unwind clobber\n");
     Result.addFnAttr(llvm::Attribute::NoUnwind);
+  }
 
   if (NoMerge)
     Result.addFnAttr(llvm::Attribute::NoMerge);
@@ -3267,8 +3269,10 @@ CodeGenFunction::GenerateCapturedStmtFunction(const CapturedStmt &S) {
     llvm::Function::Create(FuncLLVMTy, llvm::GlobalValue::InternalLinkage,
                            CapturedStmtInfo->getHelperName(), &CGM.getModule());
   CGM.SetInternalFunctionAttributes(CD, F, FuncInfo);
-  if (CD->isNothrow())
+  if (CD->isNothrow()) {
+    printf("here adding the function attribute\n");
     F->addFnAttr(llvm::Attribute::NoUnwind);
+  }
 
   // Generate the function.
   StartFunction(CD, Ctx.VoidTy, F, FuncInfo, Args, CD->getLocation(),

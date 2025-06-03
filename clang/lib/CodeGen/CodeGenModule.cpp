@@ -2498,8 +2498,10 @@ void CodeGenModule::SetLLVMFunctionAttributesForDefinition(const Decl *D,
     B.addAttribute("stack-probe-size",
                    std::to_string(CodeGenOpts.StackProbeSize));
 
-  if (!hasUnwindExceptions(LangOpts))
+  if (!hasUnwindExceptions(LangOpts)) {
+    printf("adding no unwind\n");
     B.addAttribute(llvm::Attribute::NoUnwind);
+  }
 
   if (D && D->hasAttr<NoStackProtectorAttr>())
     ; // Do nothing.
