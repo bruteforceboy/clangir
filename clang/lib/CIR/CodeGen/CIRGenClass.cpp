@@ -2012,7 +2012,11 @@ void CIRGenFunction::emitCXXConstructorCall(
       Args, D, Type, ExtraArgs.Prefix, ExtraArgs.Suffix, PassPrototypeArgs);
   CIRGenCallee Callee = CIRGenCallee::forDirect(CalleePtr, GlobalDecl(D, Type));
   cir::CIRCallOpInterface C;
-  emitCall(Info, Callee, ReturnValueSlot(), Args, &C, false, getLoc(Loc));
+
+  auto cxxCtor = cir::CXXCtorAttr::get(
+      &getMLIRContext(), getContext().getRecordType(ClassDecl).getAsString());
+  emitCall(Info, Callee, ReturnValueSlot(), Args, &C, false, getLoc(Loc), {},
+           cxxCtor, {});
 
   assert(CGM.getCodeGenOpts().OptimizationLevel == 0 ||
          ClassDecl->isDynamicClass() || Type == Ctor_Base ||

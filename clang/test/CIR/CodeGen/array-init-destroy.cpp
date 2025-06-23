@@ -24,13 +24,13 @@ void x() {
 
 // BEFORE:   cir.array.ctor(%[[ArrayAddr]] : !cir.ptr<!cir.array<!rec_xpto x 2>>) {
 // BEFORE:   ^bb0(%arg0: !cir.ptr<!rec_xpto>
-// BEFORE:     cir.call @_ZN4xptoC1Ev(%arg0) : (!cir.ptr<!rec_xpto>) -> ()
+// BEFORE:     cir.call @_ZN4xptoC1Ev(%arg0) {cxx_ctor = #cir.cxx_ctor<"class xpto">} : (!cir.ptr<!rec_xpto>) -> ()
 // BEFORE:     cir.yield
 // BEFORE:   }
 
 // BEFORE:   cir.array.dtor(%[[ArrayAddr]] : !cir.ptr<!cir.array<!rec_xpto x 2>>) {
 // BEFORE:   ^bb0(%arg0: !cir.ptr<!rec_xpto>
-// BEFORE:     cir.call @_ZN4xptoD1Ev(%arg0) : (!cir.ptr<!rec_xpto>) -> ()
+// BEFORE:     cir.call @_ZN4xptoD1Ev(%arg0) {cxx_dtor = #cir.cxx_dtor<"class xpto">} : (!cir.ptr<!rec_xpto>) -> ()
 // BEFORE:     cir.yield
 // BEFORE:   }
 
@@ -44,7 +44,7 @@ void x() {
 // AFTER: cir.do {
 // AFTER:   %[[ArrayElt:.*]] = cir.load %[[TmpIdx]] : !cir.ptr<!cir.ptr<!rec_xpto>>, !cir.ptr<!rec_xpto>
 // AFTER:   %[[ConstOne:.*]] = cir.const #cir.int<1> : !u64i
-// AFTER:   cir.call @_ZN4xptoC1Ev(%[[ArrayElt]]) : (!cir.ptr<!rec_xpto>) -> ()
+// AFTER:   cir.call @_ZN4xptoC1Ev(%[[ArrayElt]]) {cxx_ctor = #cir.cxx_ctor<"class xpto">} : (!cir.ptr<!rec_xpto>) -> ()
 // AFTER:   %[[NextElt:.*]] = cir.ptr_stride(%[[ArrayElt]] : !cir.ptr<!rec_xpto>, %[[ConstOne]] : !u64i), !cir.ptr<!rec_xpto>
 // AFTER:   cir.store %[[NextElt]], %[[TmpIdx]] : !cir.ptr<!rec_xpto>, !cir.ptr<!cir.ptr<!rec_xpto>>
 // AFTER:   cir.yield
@@ -55,7 +55,7 @@ void x() {
 // AFTER: }
 
 // AFTER: cir.do {
-// AFTER:   cir.call @_ZN4xptoD1Ev({{.*}}) : (!cir.ptr<!rec_xpto>) -> ()
+// AFTER:   cir.call @_ZN4xptoD1Ev({{.*}}) {cxx_dtor = #cir.cxx_dtor<"class xpto">} : (!cir.ptr<!rec_xpto>) -> ()
 // AFTER: } while {
 // AFTER: }
 

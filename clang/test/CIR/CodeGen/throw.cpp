@@ -46,7 +46,7 @@ void refoo1() {
 // CIR:   cir.scope {
 // CIR:     %[[V2:.*]] = cir.alloca !rec_S, !cir.ptr<!rec_S>, ["s", init] {alignment = 1 : i64}
 // CIR:     cir.try {
-// CIR:       cir.call exception @_ZN1SC2Ev(%[[V2]]) : (!cir.ptr<!rec_S>) -> ()
+// CIR:       cir.call exception @_ZN1SC2Ev(%[[V2]]) {cxx_ctor = #cir.cxx_ctor<"struct S">} : (!cir.ptr<!rec_S>) -> ()
 // CIR:       cir.call exception @__cxa_rethrow() : () -> ()
 // CIR:       cir.unreachable
 // CIR:     ^bb1:  // no predecessors
@@ -129,7 +129,7 @@ void refoo2() {
 // CIR:         } body {
 // CIR:           cir.scope {
 // CIR:             %[[V5:.*]] = cir.alloca !rec_S, !cir.ptr<!rec_S>, ["s", init] {alignment = 1 : i64}
-// CIR:             cir.call exception @_ZN1SC2Ev(%[[V5]]) : (!cir.ptr<!rec_S>) -> ()
+// CIR:             cir.call exception @_ZN1SC2Ev(%[[V5]]) {cxx_ctor = #cir.cxx_ctor<"struct S">} : (!cir.ptr<!rec_S>) -> ()
 // CIR:             cir.call exception @__cxa_rethrow() : () -> ()
 // CIR:             cir.unreachable
 // CIR:           ^bb1:  // no predecessors
@@ -143,7 +143,7 @@ void refoo2() {
 // CIR:           cir.yield
 // CIR:         }
 // CIR:       }
-// CIR:       cir.call exception @_ZN1SC2Ev(%[[V2]]) : (!cir.ptr<!rec_S>) -> ()
+// CIR:       cir.call exception @_ZN1SC2Ev(%[[V2]]) {cxx_ctor = #cir.cxx_ctor<"struct S">} : (!cir.ptr<!rec_S>) -> ()
 // CIR:       cir.yield
 // CIR:     } catch [type #cir.all {
 // CIR:       %[[V3:.*]] = cir.catch_param -> !cir.ptr<!void>
@@ -225,7 +225,7 @@ void refoo3() {
 // CIR:       cir.call exception @__cxa_rethrow() : () -> ()
 // CIR:       cir.unreachable
 // CIR:     ^bb1:  // no predecessors
-// CIR:       cir.call exception @_ZN1SC2Ev(%[[V2]]) : (!cir.ptr<!rec_S>) -> ()
+// CIR:       cir.call exception @_ZN1SC2Ev(%[[V2]]) {cxx_ctor = #cir.cxx_ctor<"struct S">} : (!cir.ptr<!rec_S>) -> ()
 // CIR:       cir.yield
 // CIR:     } catch [type #cir.all {
 // CIR:       %[[V3:.*]] = cir.catch_param -> !cir.ptr<!void>

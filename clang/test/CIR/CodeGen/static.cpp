@@ -22,7 +22,7 @@ static Init __ioinit2(false);
 // BEFORE-NEXT:   cir.global "private" internal dso_local @_ZL8__ioinit = ctor : !rec_Init {
 // BEFORE-NEXT:     %0 = cir.get_global @_ZL8__ioinit : !cir.ptr<!rec_Init>
 // BEFORE-NEXT:     %1 = cir.const #true
-// BEFORE-NEXT:     cir.call @_ZN4InitC1Eb(%0, %1) : (!cir.ptr<!rec_Init>, !cir.bool) -> ()
+// BEFORE-NEXT:     cir.call @_ZN4InitC1Eb(%0, %1) {cxx_ctor = #cir.cxx_ctor<"class Init">} : (!cir.ptr<!rec_Init>, !cir.bool) -> ()
 // BEFORE-NEXT:   } dtor {
 // BEFORE-NEXT:      %0 = cir.get_global @_ZL8__ioinit : !cir.ptr<!rec_Init>
 // BEFORE-NEXT:      cir.call @_ZN4InitD1Ev(%0) : (!cir.ptr<!rec_Init>) -> ()
@@ -30,7 +30,7 @@ static Init __ioinit2(false);
 // BEFORE:        cir.global "private" internal dso_local @_ZL9__ioinit2 = ctor : !rec_Init {
 // BEFORE-NEXT:     %0 = cir.get_global @_ZL9__ioinit2 : !cir.ptr<!rec_Init>
 // BEFORE-NEXT:     %1 = cir.const #false
-// BEFORE-NEXT:     cir.call @_ZN4InitC1Eb(%0, %1) : (!cir.ptr<!rec_Init>, !cir.bool) -> ()
+// BEFORE-NEXT:     cir.call @_ZN4InitC1Eb(%0, %1) {cxx_ctor = #cir.cxx_ctor<"class Init">} : (!cir.ptr<!rec_Init>, !cir.bool) -> ()
 // BEFORE-NEXT:   } dtor  {
 // BEFORE-NEXT:     %0 = cir.get_global @_ZL9__ioinit2 : !cir.ptr<!rec_Init>
 // BEFORE-NEXT:     cir.call @_ZN4InitD1Ev(%0) : (!cir.ptr<!rec_Init>) -> ()
@@ -47,7 +47,7 @@ static Init __ioinit2(false);
 // AFTER-NEXT:   cir.func internal private @__cxx_global_var_init()
 // AFTER-NEXT:     %0 = cir.get_global @_ZL8__ioinit : !cir.ptr<!rec_Init>
 // AFTER-NEXT:     %1 = cir.const #true
-// AFTER-NEXT:     cir.call @_ZN4InitC1Eb(%0, %1) : (!cir.ptr<!rec_Init>, !cir.bool) -> ()
+// AFTER-NEXT:     cir.call @_ZN4InitC1Eb(%0, %1) {cxx_ctor = #cir.cxx_ctor<"class Init">} : (!cir.ptr<!rec_Init>, !cir.bool) -> ()
 // AFTER-NEXT:     %2 = cir.get_global @_ZL8__ioinit : !cir.ptr<!rec_Init>
 // AFTER-NEXT:     %3 = cir.get_global @_ZN4InitD1Ev : !cir.ptr<!cir.func<(!cir.ptr<!rec_Init>)>>
 // AFTER-NEXT:     %4 = cir.cast(bitcast, %3 : !cir.ptr<!cir.func<(!cir.ptr<!rec_Init>)>>), !cir.ptr<!cir.func<(!cir.ptr<!void>)>>
@@ -59,7 +59,7 @@ static Init __ioinit2(false);
 // AFTER-NEXT:   cir.func internal private @__cxx_global_var_init.1()
 // AFTER-NEXT:     %0 = cir.get_global @_ZL9__ioinit2 : !cir.ptr<!rec_Init>
 // AFTER-NEXT:     %1 = cir.const #false
-// AFTER-NEXT:     cir.call @_ZN4InitC1Eb(%0, %1) : (!cir.ptr<!rec_Init>, !cir.bool) -> ()
+// AFTER-NEXT:     cir.call @_ZN4InitC1Eb(%0, %1) {cxx_ctor = #cir.cxx_ctor<"class Init">} : (!cir.ptr<!rec_Init>, !cir.bool) -> ()
 // AFTER-NEXT:     %2 = cir.get_global @_ZL9__ioinit2 : !cir.ptr<!rec_Init>
 // AFTER-NEXT:     %3 = cir.get_global @_ZN4InitD1Ev : !cir.ptr<!cir.func<(!cir.ptr<!rec_Init>)>>
 // AFTER-NEXT:     %4 = cir.cast(bitcast, %3 : !cir.ptr<!cir.func<(!cir.ptr<!rec_Init>)>>), !cir.ptr<!cir.func<(!cir.ptr<!void>)>>

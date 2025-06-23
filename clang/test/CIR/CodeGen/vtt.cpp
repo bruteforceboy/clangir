@@ -105,15 +105,15 @@ int f() {
 // CIR:   cir.store{{.*}} %arg0, %{{[0-9]+}} : !cir.ptr<!rec_D>, !cir.ptr<!cir.ptr<!rec_D>>
 // CIR:   %[[D_PTR:.*]] = cir.load{{.*}} %0 : !cir.ptr<!cir.ptr<!rec_D>>, !cir.ptr<!rec_D>
 // CIR:   %[[A_PTR:.*]] = cir.base_class_addr %[[D_PTR]] : !cir.ptr<!rec_D> nonnull [40] -> !cir.ptr<!rec_A>
-// CIR:   cir.call @_ZN1AC2Ev(%[[A_PTR]]) : (!cir.ptr<!rec_A>) -> ()
+// CIR:   cir.call @_ZN1AC2Ev(%[[A_PTR]]) {cxx_ctor = #cir.cxx_ctor<"class A">} : (!cir.ptr<!rec_A>) -> ()
 
 // CIR:   %[[B_PTR:.*]] = cir.base_class_addr %[[D_PTR]] : !cir.ptr<!rec_D> nonnull [0] -> !cir.ptr<!rec_B>
 // CIR:   %[[VTT_D_TO_B:.*]] = cir.vtt.address_point @_ZTT1D, offset = 1 -> !cir.ptr<!cir.ptr<!void>>
-// CIR:   cir.call @_ZN1BC2Ev(%[[B_PTR]], %[[VTT_D_TO_B]]) : (!cir.ptr<!rec_B>, !cir.ptr<!cir.ptr<!void>>) -> ()
+// CIR:   cir.call @_ZN1BC2Ev(%[[B_PTR]], %[[VTT_D_TO_B]]) {cxx_ctor = #cir.cxx_ctor<"class B">} : (!cir.ptr<!rec_B>, !cir.ptr<!cir.ptr<!void>>) -> ()
 
 // CIR:   %[[C_PTR:.*]] = cir.base_class_addr %1 : !cir.ptr<!rec_D> nonnull [16] -> !cir.ptr<!rec_C>
 // CIR:   %[[VTT_D_TO_C:.*]] = cir.vtt.address_point @_ZTT1D, offset = 3 -> !cir.ptr<!cir.ptr<!void>>
-// CIR:   cir.call @_ZN1CC2Ev(%[[C_PTR]], %[[VTT_D_TO_C]]) : (!cir.ptr<!rec_C>, !cir.ptr<!cir.ptr<!void>>) -> ()
+// CIR:   cir.call @_ZN1CC2Ev(%[[C_PTR]], %[[VTT_D_TO_C]]) {cxx_ctor = #cir.cxx_ctor<"class C">} : (!cir.ptr<!rec_C>, !cir.ptr<!cir.ptr<!void>>) -> ()
 
 // CIR:   %{{[0-9]+}} = cir.vtable.address_point(@_ZTV1D, address_point = <index = 0, offset = 3>) : !cir.ptr<!cir.ptr<!cir.func<() -> !u32i>>>
 // CIR:   %{{[0-9]+}} = cir.cast(bitcast, %{{[0-9]+}} : !cir.ptr<!rec_D>), !cir.ptr<!cir.ptr<!cir.ptr<!cir.func<() -> !u32i>>>>
@@ -171,8 +171,8 @@ namespace other {
 // CIR:           cir.store{{.*}} %[[VAL_0]], %[[VAL_1]] : !cir.ptr<!rec_other3A3AB>, !cir.ptr<!cir.ptr<!rec_other3A3AB>>
 // CIR:           %[[VAL_2:.*]] = cir.load{{.*}} %[[VAL_1]] : !cir.ptr<!cir.ptr<!rec_other3A3AB>>, !cir.ptr<!rec_other3A3AB>
 // CIR:           %[[VAL_3:.*]] = cir.vtt.address_point @_ZTTN5other1BE, offset = 0 -> !cir.ptr<!cir.ptr<!void>>
-// CIR:           cir.call @_ZN5other1BD2Ev(%[[VAL_2]], %[[VAL_3]]) : (!cir.ptr<!rec_other3A3AB>, !cir.ptr<!cir.ptr<!void>>) -> ()
+// CIR:           cir.call @_ZN5other1BD2Ev(%[[VAL_2]], %[[VAL_3]]) {cxx_dtor = #cir.cxx_dtor<"struct other::B">} : (!cir.ptr<!rec_other3A3AB>, !cir.ptr<!cir.ptr<!void>>) -> ()
 // CIR:           %[[VAL_4:.*]] = cir.base_class_addr %[[VAL_2]] : !cir.ptr<!rec_other3A3AB> nonnull [0] -> !cir.ptr<!rec_other3A3AA>
-// CIR:           cir.call @_ZN5other1AD2Ev(%[[VAL_4]]) : (!cir.ptr<!rec_other3A3AA>) -> ()
+// CIR:           cir.call @_ZN5other1AD2Ev(%[[VAL_4]]) {cxx_dtor = #cir.cxx_dtor<"struct other::A">} : (!cir.ptr<!rec_other3A3AA>) -> ()
 // CIR:           cir.return
 // CIR:         }

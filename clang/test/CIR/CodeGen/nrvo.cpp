@@ -16,7 +16,7 @@ std::vector<const char*> test_nrvo() {
 // CHECK:   %1 = cir.alloca !cir.bool, !cir.ptr<!cir.bool>, ["nrvo"] {alignment = 1 : i64}
 // CHECK:   %2 = cir.const #false
 // CHECK:   cir.store{{.*}} %2, %1 : !cir.bool, !cir.ptr<!cir.bool>
-// CHECK:   cir.call @_ZNSt6vectorIPKcEC1Ev(%0) : (!cir.ptr<![[VEC]]>) -> ()
+// CHECK:   cir.call @_ZNSt6vectorIPKcEC1Ev(%0) {cxx_ctor = #cir.cxx_ctor<"class std::vector<const char *>">} : (!cir.ptr<![[VEC]]>) -> ()
 // CHECK:   cir.scope {
 // CHECK:     %5 = cir.alloca !cir.ptr<!s8i>, !cir.ptr<!cir.ptr<!s8i>>, ["ref.tmp0"] {alignment = 8 : i64}
 // CHECK:     %6 = cir.get_global @".str" : !cir.ptr<!cir.array<!s8i x 59>>

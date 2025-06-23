@@ -154,7 +154,7 @@ void h() { S s; }
 // CHECK:   %2 = cir.call @_Z11get_defaultv() : () -> !rec_A
 // CHECK:   cir.store{{.*}} %2, %1 : !rec_A, !cir.ptr<!rec_A>
 // CHECK:   %3 = cir.load{{.*}} %1 : !cir.ptr<!rec_A>, !rec_A
-// CHECK:   cir.call @_ZN1SC1E1A(%0, %3) : (!cir.ptr<!rec_S>, !rec_A) -> ()
+// CHECK:   cir.call @_ZN1SC1E1A(%0, %3) {cxx_ctor = #cir.cxx_ctor<"struct S">} : (!cir.ptr<!rec_S>, !rec_A) -> ()
 // CHECK:   cir.return
 // CHECK: }
 

@@ -25,7 +25,7 @@ void t_new_constant_size_constructor() {
 // BEFORE:    %[[OBJ_ARRAY_PTR:.*]] = cir.cast(bitcast, %[[OBJ_ELEM_PTR]] : !cir.ptr<!rec_E>), !cir.ptr<!cir.array<!rec_E x 3>>
 // BEFORE:    cir.array.ctor(%[[OBJ_ARRAY_PTR]] : !cir.ptr<!cir.array<!rec_E x 3>>) {
 // BEFORE:    ^bb0(%arg0: !cir.ptr<!rec_E>
-// BEFORE:      cir.call @_ZN1EC1Ev(%arg0) : (!cir.ptr<!rec_E>) -> ()
+// BEFORE:      cir.call @_ZN1EC1Ev(%arg0) {cxx_ctor = #cir.cxx_ctor<"class E">} : (!cir.ptr<!rec_E>) -> ()
 // BEFORE:      cir.yield
 // BEFORE:    }
 
@@ -49,7 +49,7 @@ void t_new_constant_size_constructor() {
 // AFTER:    cir.do {
 // AFTER:      %[[CUR_ELEM_PTR:.*]] = cir.load %[[CUR_ELEM_ALLOCA]] : !cir.ptr<!cir.ptr<!rec_E>>, !cir.ptr<!rec_E>
 // AFTER:      %[[OFFSET:.*]] = cir.const #cir.int<1> : !u64i
-// AFTER:      cir.call @_ZN1EC1Ev(%[[CUR_ELEM_PTR]]) : (!cir.ptr<!rec_E>) -> ()
+// AFTER:      cir.call @_ZN1EC1Ev(%[[CUR_ELEM_PTR]]) {cxx_ctor = #cir.cxx_ctor<"class E">} : (!cir.ptr<!rec_E>) -> ()
 // AFTER:      %[[NEXT_PTR:.*]] = cir.ptr_stride(%[[CUR_ELEM_PTR]] : !cir.ptr<!rec_E>, %[[OFFSET]] : !u64i), !cir.ptr<!rec_E>
 // AFTER:      cir.store{{.*}} %[[NEXT_PTR]], %[[CUR_ELEM_ALLOCA]] : !cir.ptr<!rec_E>, !cir.ptr<!cir.ptr<!rec_E>>
 // AFTER:      cir.yield

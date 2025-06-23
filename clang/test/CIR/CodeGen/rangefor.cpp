@@ -31,7 +31,7 @@ void init(unsigned numImages) {
 // CHECK:   cir.store{{.*}} %arg0, %0 : !u32i, !cir.ptr<!u32i>
 // CHECK:   %2 = cir.load{{.*}} %0 : !cir.ptr<!u32i>, !u32i
 // CHECK:   %3 = cir.cast(integral, %2 : !u32i), !u64i
-// CHECK:   cir.call @_ZNSt6vectorI6tripleEC1Em(%1, %3) : (!cir.ptr<![[VEC]]>, !u64i) -> ()
+// CHECK:   cir.call @_ZNSt6vectorI6tripleEC1Em(%1, %3) {cxx_ctor = #cir.cxx_ctor<"class std::vector<struct triple>">} : (!cir.ptr<![[VEC]]>, !u64i) -> ()
 // CHECK:   cir.scope {
 // CHECK:     %4 = cir.alloca !cir.ptr<![[VEC]]>, !cir.ptr<!cir.ptr<![[VEC]]>>, ["__range1", init, const] {alignment = 8 : i64}
 // CHECK:     %5 = cir.alloca ![[VEC_IT]], !cir.ptr<![[VEC_IT]]>, ["__begin1", init] {alignment = 8 : i64}

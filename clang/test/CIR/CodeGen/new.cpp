@@ -25,8 +25,8 @@ void m(int a, int b) {
 // CHECK:     %8 = cir.load{{.*}} %7 : !cir.ptr<!s32i>, !s32i
 // CHECK:     %9 = cir.load{{.*}} %1 : !cir.ptr<!cir.ptr<!s32i>>, !cir.ptr<!s32i>
 // CHECK:     %10 = cir.load{{.*}} %9 : !cir.ptr<!s32i>, !s32i
-// CHECK:     cir.call @_ZN1SC1Eii(%6, %8, %10) : (!cir.ptr<!rec_S>, !s32i, !s32i) -> ()
-// CHECK:     cir.call @_ZNSt10shared_ptrI1SEC1EPS0_(%2, %6) : (!cir.ptr<!rec_std3A3Ashared_ptr3CS3E>, !cir.ptr<!rec_S>) -> ()
+// CHECK:     cir.call @_ZN1SC1Eii(%6, %8, %10) {cxx_ctor = #cir.cxx_ctor<"struct S">} : (!cir.ptr<!rec_S>, !s32i, !s32i) -> ()
+// CHECK:     cir.call @_ZNSt10shared_ptrI1SEC1EPS0_(%2, %6) {cxx_ctor = #cir.cxx_ctor<"class std::shared_ptr<struct S>">} : (!cir.ptr<!rec_std3A3Ashared_ptr3CS3E>, !cir.ptr<!rec_S>) -> ()
 // CHECK:   }
 
 class B {
@@ -48,7 +48,7 @@ public:
 // CHECK:   %6 = cir.cast(bitcast, %5 : !cir.ptr<!void>), !cir.ptr<!rec_B>
 
 // cir.call @B::B()(%new_placament_ptr)
-// CHECK:   cir.call @_ZN1BC1Ev(%6) : (!cir.ptr<!rec_B>) -> ()
+// CHECK:   cir.call @_ZN1BC1Ev(%6) {cxx_ctor = #cir.cxx_ctor<"class B">} : (!cir.ptr<!rec_B>) -> ()
 // CHECK:   cir.return
 // CHECK: }
 

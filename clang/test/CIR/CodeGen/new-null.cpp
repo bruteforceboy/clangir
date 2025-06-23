@@ -57,7 +57,7 @@ namespace test15 {
   // CIR:           %[[VAL_7:.*]] = cir.cmp(ne, %[[VAL_5]], %[[VAL_6]]) : !cir.ptr<!void>, !cir.bool
   // CIR:           %[[VAL_8:.*]] = cir.cast(bitcast, %[[VAL_5]] : !cir.ptr<!void>), !cir.ptr<![[TEST15A]]>
   // CIR:           cir.if %[[VAL_7]] {
-  // CIR:             cir.call @_ZN6test151AC1Ev(%[[VAL_8]]) : (!cir.ptr<![[TEST15A]]>) -> ()
+  // CIR:             cir.call @_ZN6test151AC1Ev(%[[VAL_8]]) {cxx_ctor = #cir.cxx_ctor<"struct test15::A">} : (!cir.ptr<![[TEST15A]]>) -> ()
   // CIR:           }
   // CIR:           cir.return
   // CIR:         }

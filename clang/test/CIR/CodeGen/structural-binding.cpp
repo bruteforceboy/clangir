@@ -61,7 +61,7 @@ void f(A &a) {
 
   auto [x2, y2, z2] = a;
   (x2, y2, z2);
-  // CIR: cir.call @_ZN1AC1ERKS_(%2, {{.*}}) : (!cir.ptr<!rec_A>, !cir.ptr<!rec_A>) -> ()
+  // CIR: cir.call @_ZN1AC1ERKS_(%2, {{.*}}) {cxx_ctor = #cir.cxx_ctor<"struct A">} : (!cir.ptr<!rec_A>, !cir.ptr<!rec_A>) -> ()
   // CIR: {{.*}} = cir.get_member %2[0] {name = "a"} : !cir.ptr<!rec_A> -> !cir.ptr<!rec_B>
   // CIR: {{.*}} = cir.get_member %2[2] {name = "b"} : !cir.ptr<!rec_A> -> !cir.ptr<!s32i>
   // CIR: {{.*}} = cir.get_member %2[3] {name = "c"} : !cir.ptr<!rec_A> -> !cir.ptr<!s8i>
@@ -84,7 +84,7 @@ void g(C &c) {
 
   auto [x8, y8] = c;
   (x8, y8);
-  // CIR: cir.call @_ZN1CC1ERKS_(%[[c:.*]], %7) : (!cir.ptr<!rec_C>, !cir.ptr<!rec_C>) -> ()
+  // CIR: cir.call @_ZN1CC1ERKS_(%[[c:.*]], %7) {cxx_ctor = #cir.cxx_ctor<"struct C">} : (!cir.ptr<!rec_C>, !cir.ptr<!rec_C>) -> ()
   // CIR: %[[x8:.*]] = cir.call @_Z3getILj0EERKiRK1C(%[[c]]) : (!cir.ptr<!rec_C>) -> !cir.ptr<!s32i>
   // CIR: cir.store{{.*}} %[[x8]], %[[x8p:.*]] : !cir.ptr<!s32i>, !cir.ptr<!cir.ptr<!s32i>>
   // CIR: %[[x9:.*]] = cir.call @_Z3getILj1EERKiRK1C(%[[c]]) : (!cir.ptr<!rec_C>) -> !cir.ptr<!s32i>

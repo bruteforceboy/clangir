@@ -27,7 +27,7 @@ C a, b(x), c(0, 2);
 // CHECK:   %[[VAL_4:.*]] = cir.get_member %[[VAL_3]][0] {name = "a"} : !cir.ptr<!rec_anon2E0> -> !cir.ptr<!rec_A>
 // CHECK:   %[[VAL_5:.*]] = cir.const {{.*}} : !rec_A
 // CHECK:   cir.store{{.*}} %[[VAL_5]], %[[VAL_4]] : !rec_A, !cir.ptr<!rec_A>
-// CHECK:   cir.call @_ZN1AC1Ev(%[[VAL_4]]) : (!cir.ptr<!rec_A>) -> ()
+// CHECK:   cir.call @_ZN1AC1Ev(%[[VAL_4]]) {cxx_ctor = #cir.cxx_ctor<"struct A">} : (!cir.ptr<!rec_A>) -> ()
 // CHECK:   %[[VAL_6:.*]] = cir.get_member %[[VAL_2]][1] {name = "c"} : !cir.ptr<!rec_C> -> !cir.ptr<!s32i>
 // CHECK:   %[[VAL_7:.*]] = cir.const {{.*}}<0> : !s32i
 // CHECK:   cir.store{{.*}} %[[VAL_7]], %[[VAL_6]] : !s32i, !cir.ptr<!s32i>

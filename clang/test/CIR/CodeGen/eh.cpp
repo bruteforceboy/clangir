@@ -14,7 +14,7 @@ void test1() {
 // CIR-LABEL: @_Z5test1v
 // CIR:   %[[ALLOC:.*]] = cir.alloc.exception 8 -> !cir.ptr<!rec_test1_D>
 // CIR:   %[[G:.*]] = cir.get_global @d1 : !cir.ptr<!rec_test1_D>
-// CIR:   cir.call @_ZN7test1_DC1ERKS_(%[[ALLOC]], %[[G]]) : (!cir.ptr<!rec_test1_D>, !cir.ptr<!rec_test1_D>) -> ()
+// CIR:   cir.call @_ZN7test1_DC1ERKS_(%[[ALLOC]], %[[G]]) {cxx_ctor = #cir.cxx_ctor<"struct test1_D">} : (!cir.ptr<!rec_test1_D>, !cir.ptr<!rec_test1_D>) -> ()
 // CIR:   cir.throw %[[ALLOC]] : !cir.ptr<!rec_test1_D>, @_ZTI7test1_D
 // CIR:   cir.unreachable
 // CIR: }
@@ -43,7 +43,7 @@ void test2() {
 // CIR:   %[[ALLOC:.*]] = cir.alloc.exception 16 -> !cir.ptr<!rec_test2_D>
 // CIR:   %[[G:.*]] = cir.get_global @d2 : !cir.ptr<!rec_test2_D>
 // CIR:   cir.try synthetic cleanup {
-// CIR:     cir.call exception @_ZN7test2_DC1ERKS_(%[[ALLOC]], %[[G]]) : (!cir.ptr<!rec_test2_D>, !cir.ptr<!rec_test2_D>) -> () cleanup {
+// CIR:     cir.call exception @_ZN7test2_DC1ERKS_(%[[ALLOC]], %[[G]]) {cxx_ctor = #cir.cxx_ctor<"struct test2_D">} : (!cir.ptr<!rec_test2_D>, !cir.ptr<!rec_test2_D>) -> () cleanup {
 // CIR:       %[[VOID_PTR:.*]] = cir.cast(bitcast, %[[ALLOC]] : !cir.ptr<!rec_test2_D>), !cir.ptr<!void>
 // CIR:       cir.free.exception %[[VOID_PTR]]
 // CIR:       cir.yield

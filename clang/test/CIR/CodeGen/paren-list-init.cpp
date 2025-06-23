@@ -25,21 +25,21 @@ void make1() {
   S1((Vec&&) v);
 // CIR: cir.func linkonce_odr @_Z5make1ILi0EEvv()
 // CIR:   %[[VEC:.*]] = cir.alloca ![[VecType]], !cir.ptr<![[VecType]]>
-// CIR:   cir.call @_ZN3VecC1Ev(%[[VEC]]) : (!cir.ptr<![[VecType]]>)
+// CIR:   cir.call @_ZN3VecC1Ev(%[[VEC]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecType]]>)
 // CIR:   cir.scope {
 // CIR:     %[[AGG_TMP:.*]] = cir.alloca ![[S1]], !cir.ptr<![[S1]]>, ["agg.tmp.ensured"]
 // CIR:     %[[FIELD:.*]] = cir.get_member %[[AGG_TMP]][0] {name = "v"} : !cir.ptr<![[S1]]> -> !cir.ptr<![[VecType]]>
-// CIR:     cir.call @_ZN3VecC1EOS_(%[[FIELD]], %[[VEC]]) : (!cir.ptr<![[VecType]]>, !cir.ptr<![[VecType]]>) -> ()
-// CIR:     cir.call @_ZN2S1D1Ev(%[[AGG_TMP]]) : (!cir.ptr<![[S1]]>) -> ()
+// CIR:     cir.call @_ZN3VecC1EOS_(%[[FIELD]], %[[VEC]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecType]]>, !cir.ptr<![[VecType]]>) -> ()
+// CIR:     cir.call @_ZN2S1D1Ev(%[[AGG_TMP]]) {cxx_dtor = #cir.cxx_dtor<"struct S1">} : (!cir.ptr<![[S1]]>) -> ()
 // CIR:   }
-// CIR:   cir.call @_ZN3VecD1Ev(%[[VEC]]) : (!cir.ptr<![[VecType]]>) -> ()
+// CIR:   cir.call @_ZN3VecD1Ev(%[[VEC]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecType]]>) -> ()
 // CIR:   cir.return
 
 // CIR_EH: cir.func linkonce_odr @_Z5make1ILi0EEvv()
 // CIR_EH:  %[[VEC:.*]] = cir.alloca ![[VecType]], !cir.ptr<![[VecType]]>, ["v", init]
 
 // Construct v
-// CIR_EH:  cir.call @_ZN3VecC1Ev(%[[VEC]]) : (!cir.ptr<![[VecType]]>) -> ()
+// CIR_EH:  cir.call @_ZN3VecC1Ev(%[[VEC]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecType]]>) -> ()
 // CIR_EH:  cir.scope {
 // CIR_EH:    %1 = cir.alloca ![[S1]], !cir.ptr<![[S1]]>, ["agg.tmp.ensured"]
 // CIR_EH:    %2 = cir.get_member %1[0] {name = "v"} : !cir.ptr<![[S1]]> -> !cir.ptr<![[VecType]]>
@@ -56,11 +56,11 @@ void make1() {
 // CIR_EH:    } catch [#cir.unwind {
 // CIR_EH:      cir.resume
 // CIR_EH:    }]
-// CIR_EH:    cir.call @_ZN2S1D1Ev(%1) : (!cir.ptr<![[S1]]>) -> ()
+// CIR_EH:    cir.call @_ZN2S1D1Ev(%1) {cxx_dtor = #cir.cxx_dtor<"struct S1">} : (!cir.ptr<![[S1]]>) -> ()
 // CIR_EH:  }
 
 // Destroy v after successful cir.try
-// CIR_EH:  cir.call @_ZN3VecD1Ev(%[[VEC]]) : (!cir.ptr<![[VecType]]>) -> ()
+// CIR_EH:  cir.call @_ZN3VecD1Ev(%[[VEC]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecType]]>) -> ()
 // CIR_EH:  cir.return
 }
 

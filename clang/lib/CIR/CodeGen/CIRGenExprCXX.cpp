@@ -1572,10 +1572,15 @@ RValue CIRGenFunction::emitCXXDestructorCall(GlobalDecl Dtor,
   commonBuildCXXMemberOrOperatorCall(*this, DtorDecl, This, ImplicitParam,
                                      ImplicitParamTy, CE, Args, nullptr);
   assert((CE || Dtor.getDecl()) && "expected source location provider");
+
+  auto cxxDtor = cir::CXXDtorAttr::get(
+      &getMLIRContext(),
+      getContext().getRecordType(DtorDecl->getParent()).getAsString());
   return emitCall(CGM.getTypes().arrangeCXXStructorDeclaration(Dtor), Callee,
                   ReturnValueSlot(), Args, nullptr, CE && CE == MustTailCall,
                   CE ? getLoc(CE->getExprLoc())
-                     : getLoc(Dtor.getDecl()->getSourceRange()));
+                     : getLoc(Dtor.getDecl()->getSourceRange()),
+                  {}, {}, cxxDtor);
 }
 
 /// Emit a call to an operator new or operator delete function, as implicitly

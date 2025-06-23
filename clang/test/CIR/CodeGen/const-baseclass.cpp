@@ -15,6 +15,6 @@ void f() {
 
 // CHECK-LABEL: @_ZN1BC2Ev
 // CHECK: %[[A:.*]] = cir.base_class_addr {{.*}} [0] -> !cir.ptr<!rec_A>
-// CHECK: cir.call @_ZN1AC2Ev(%[[A:.*]]) : (!cir.ptr<!rec_A>) -> ()
+// CHECK: cir.call @_ZN1AC2Ev(%[[A:.*]]) {cxx_ctor = #cir.cxx_ctor<"struct A">} : (!cir.ptr<!rec_A>) -> ()
 // CHECK: %[[BASE:.*]] = cir.base_class_addr {{.*}} [0] -> !cir.ptr<!rec_Empty>
-// CHECK: cir.call @_ZN5EmptyC2Ev(%[[BASE]]) : (!cir.ptr<!rec_Empty>) -> ()
+// CHECK: cir.call @_ZN5EmptyC2Ev(%[[BASE]]) {cxx_ctor = #cir.cxx_ctor<"struct Empty">} : (!cir.ptr<!rec_Empty>) -> ()

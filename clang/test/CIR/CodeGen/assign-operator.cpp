@@ -75,15 +75,15 @@ int main() {
 // CHECK: cir.func dso_local @main() -> !s32i
 // CHECK:     %0 = cir.alloca !s32i, !cir.ptr<!s32i>, ["__retval"] {alignment = 4 : i64}
 // CHECK:     %1 = cir.alloca !rec_StringView, !cir.ptr<!rec_StringView>, ["sv", init] {alignment = 8 : i64}
-// CHECK:     cir.call @_ZN10StringViewC2Ev(%1) : (!cir.ptr<!rec_StringView>) -> ()
+// CHECK:     cir.call @_ZN10StringViewC2Ev(%1) {cxx_ctor = #cir.cxx_ctor<"struct StringView">} : (!cir.ptr<!rec_StringView>) -> ()
 // CHECK:     cir.scope {
 // CHECK:       %3 = cir.alloca !rec_String, !cir.ptr<!rec_String>, ["s", init] {alignment = 8 : i64}
 // CHECK:       %4 = cir.get_global @".str" : !cir.ptr<!cir.array<!s8i x 3>>
 // CHECK:       %5 = cir.cast(array_to_ptrdecay, %4 : !cir.ptr<!cir.array<!s8i x 3>>), !cir.ptr<!s8i>
-// CHECK:       cir.call @_ZN6StringC2EPKc(%3, %5) : (!cir.ptr<!rec_String>, !cir.ptr<!s8i>) -> ()
+// CHECK:       cir.call @_ZN6StringC2EPKc(%3, %5) {cxx_ctor = #cir.cxx_ctor<"struct String">} : (!cir.ptr<!rec_String>, !cir.ptr<!s8i>) -> ()
 // CHECK:       cir.scope {
 // CHECK:         %6 = cir.alloca !rec_StringView, !cir.ptr<!rec_StringView>, ["ref.tmp0"] {alignment = 8 : i64}
-// CHECK:         cir.call @_ZN10StringViewC2ERK6String(%6, %3) : (!cir.ptr<!rec_StringView>, !cir.ptr<!rec_String>) -> ()
+// CHECK:         cir.call @_ZN10StringViewC2ERK6String(%6, %3) {cxx_ctor = #cir.cxx_ctor<"struct StringView">} : (!cir.ptr<!rec_StringView>, !cir.ptr<!rec_String>) -> ()
 // CHECK:         %7 = cir.call @_ZN10StringViewaSEOS_(%1, %6) : (!cir.ptr<!rec_StringView>, !cir.ptr<!rec_StringView>) -> !cir.ptr<!rec_StringView>
 // CHECK:       }
 // CHECK:     }

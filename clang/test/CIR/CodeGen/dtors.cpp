@@ -46,7 +46,7 @@ public:
 // CHECK:   %1 = cir.const #cir.int<1> : !s32i
 // CHECK:   %2 = cir.get_global @".str" : !cir.ptr<!cir.array<!s8i x 5>>
 // CHECK:   %3 = cir.cast(array_to_ptrdecay, %2 : !cir.ptr<!cir.array<!s8i x 5>>), !cir.ptr<!s8i>
-// CHECK:   cir.call @_ZN7PSEventC1E6EFModePKc(%0, %1, %3) : (!cir.ptr<!rec_PSEvent>, !s32i, !cir.ptr<!s8i>) -> ()
+// CHECK:   cir.call @_ZN7PSEventC1E6EFModePKc(%0, %1, %3) {cxx_ctor = #cir.cxx_ctor<"class PSEvent">} : (!cir.ptr<!rec_PSEvent>, !s32i, !cir.ptr<!s8i>) -> ()
 // CHECK:   cir.return
 // CHECK: }
 
@@ -64,7 +64,7 @@ bool bar() { return foo(1) || foo(2); }
 // CHECK:   cir.scope {
 // CHECK:     %[[V2:.*]] = cir.alloca !rec_X, !cir.ptr<!rec_X>, ["ref.tmp0"] {alignment = 4 : i64}
 // CHECK:     %[[V3:.*]] = cir.const #cir.int<1> : !s32i
-// CHECK:     cir.call @_ZN1XC2Ei(%[[V2]], %[[V3]]) : (!cir.ptr<!rec_X>, !s32i) -> ()
+// CHECK:     cir.call @_ZN1XC2Ei(%[[V2]], %[[V3]]) {cxx_ctor = #cir.cxx_ctor<"struct X">} : (!cir.ptr<!rec_X>, !s32i) -> ()
 // CHECK:     %[[V4:.*]] = cir.call @_Z3fooRK1X(%[[V2]]) : (!cir.ptr<!rec_X>) -> !cir.bool
 // CHECK:     %[[V5:.*]] = cir.ternary(%[[V4]], true {
 // CHECK:       %[[V6:.*]] = cir.const #true
@@ -72,7 +72,7 @@ bool bar() { return foo(1) || foo(2); }
 // CHECK:     }, false {
 // CHECK:       %[[V6:.*]] = cir.alloca !rec_X, !cir.ptr<!rec_X>, ["ref.tmp1"] {alignment = 4 : i64}
 // CHECK:       %[[V7:.*]] = cir.const #cir.int<2> : !s32i
-// CHECK:       cir.call @_ZN1XC2Ei(%[[V6]], %[[V7]]) : (!cir.ptr<!rec_X>, !s32i) -> ()
+// CHECK:       cir.call @_ZN1XC2Ei(%[[V6]], %[[V7]]) {cxx_ctor = #cir.cxx_ctor<"struct X">} : (!cir.ptr<!rec_X>, !s32i) -> ()
 // CHECK:       %[[V8:.*]] = cir.call @_Z3fooRK1X(%[[V6]]) : (!cir.ptr<!rec_X>) -> !cir.bool
 // CHECK:       %[[V9:.*]] = cir.ternary(%[[V8]], true {
 // CHECK:         %[[V10:.*]] = cir.const #true
@@ -81,11 +81,11 @@ bool bar() { return foo(1) || foo(2); }
 // CHECK:         %[[V10:.*]] = cir.const #false
 // CHECK:         cir.yield %[[V10]] : !cir.bool
 // CHECK:       }) : (!cir.bool) -> !cir.bool
-// CHECK:       cir.call @_ZN1XD2Ev(%[[V6]]) : (!cir.ptr<!rec_X>) -> ()
+// CHECK:       cir.call @_ZN1XD2Ev(%[[V6]]) {cxx_dtor = #cir.cxx_dtor<"struct X">} : (!cir.ptr<!rec_X>) -> ()
 // CHECK:       cir.yield %[[V9]] : !cir.bool
 // CHECK:     }) : (!cir.bool) -> !cir.bool
 // CHECK:     cir.store %[[V5]], %[[V0]] : !cir.bool, !cir.ptr<!cir.bool>
-// CHECK:     cir.call @_ZN1XD2Ev(%[[V2]]) : (!cir.ptr<!rec_X>) -> ()
+// CHECK:     cir.call @_ZN1XD2Ev(%[[V2]]) {cxx_dtor = #cir.cxx_dtor<"struct X">} : (!cir.ptr<!rec_X>) -> ()
 // CHECK:   }
 // CHECK:   %[[V1:.*]] = cir.load{{.*}} %[[V0]] : !cir.ptr<!cir.bool>, !cir.bool
 // CHECK:   cir.return %[[V1]] : !cir.bool
@@ -112,8 +112,8 @@ bool bar2() { return foo(1) && foo(2); }
 // void foo()
 // CHECK: cir.func dso_local @_Z3foov()
 // CHECK:   cir.scope {
-// CHECK:     cir.call @_ZN1BC2Ev(%0) : (!cir.ptr<!rec_B>) -> ()
-// CHECK:     cir.call @_ZN1BD2Ev(%0) : (!cir.ptr<!rec_B>) -> ()
+// CHECK:     cir.call @_ZN1BC2Ev(%0) {cxx_ctor = #cir.cxx_ctor<"class B">} : (!cir.ptr<!rec_B>) -> ()
+// CHECK:     cir.call @_ZN1BD2Ev(%0) {cxx_dtor = #cir.cxx_dtor<"class B">} : (!cir.ptr<!rec_B>) -> ()
 
 // operator delete(void*) declaration
 // CHECK:   cir.func private @_ZdlPvm(!cir.ptr<!void>, !u64i)
@@ -126,7 +126,7 @@ bool bar2() { return foo(1) && foo(2); }
 // CHECK:     %0 = cir.alloca !cir.ptr<![[ClassB]]>, !cir.ptr<!cir.ptr<![[ClassB]]>>, ["this", init] {alignment = 8 : i64}
 // CHECK:     cir.store %arg0, %0 : !cir.ptr<![[ClassB]]>, !cir.ptr<!cir.ptr<![[ClassB]]>>
 // CHECK:     %1 = cir.load{{.*}} %0 : !cir.ptr<!cir.ptr<![[ClassB]]>>, !cir.ptr<![[ClassB]]>
-// CHECK:     cir.call @_ZN1BD2Ev(%1) : (!cir.ptr<![[ClassB]]>) -> ()
+// CHECK:     cir.call @_ZN1BD2Ev(%1) {cxx_dtor = #cir.cxx_dtor<"class B">} : (!cir.ptr<![[ClassB]]>) -> ()
 // CHECK:     %2 = cir.cast(bitcast, %1 : !cir.ptr<![[ClassB]]>), !cir.ptr<!void>
 // CHECK:     cir.call @_ZdlPvm(%2, %3) : (!cir.ptr<!void>, !u64i) -> ()
 // CHECK:     cir.return
@@ -170,10 +170,10 @@ void m() { G l(j); }
 // CHECK:   %[[V2:.*]] = cir.load{{.*}} %[[V0]] : !cir.ptr<!cir.ptr<!rec_G>>, !cir.ptr<!rec_G>
 // CHECK:   %[[V3:.*]] = cir.scope {
 // CHECK:     %[[V4:.*]] = cir.alloca !rec_A2, !cir.ptr<!rec_A2>, ["agg.tmp0"] {alignment = 1 : i64}
-// CHECK:     cir.call @_ZN2A2C2Ev(%[[V4]]) : (!cir.ptr<!rec_A2>) -> ()
+// CHECK:     cir.call @_ZN2A2C2Ev(%[[V4]]) {cxx_ctor = #cir.cxx_ctor<"class A2">} : (!cir.ptr<!rec_A2>) -> ()
 // CHECK:     %[[V5:.*]] = cir.load{{.*}} %[[V4]] : !cir.ptr<!rec_A2>, !rec_A2
 // CHECK:     %[[V6:.*]] = cir.call @_ZN1G1kE2A2(%[[V2]], %[[V5]]) : (!cir.ptr<!rec_G>, !rec_A2) -> !s64i
-// CHECK:     cir.call @_ZN2A2D1Ev(%[[V4]]) : (!cir.ptr<!rec_A2>) -> ()
+// CHECK:     cir.call @_ZN2A2D1Ev(%[[V4]]) {cxx_dtor = #cir.cxx_dtor<"class A2">} : (!cir.ptr<!rec_A2>) -> ()
 // CHECK:     cir.yield %[[V6]] : !s64i
 // CHECK:   } : !s64i
 // CHECK:   cir.trap

@@ -381,7 +381,7 @@ int test_lambda_this1(){
 
 // CHECK-LABEL: test_lambda_this1
 // Construct A
-// CHECK: cir.call @_ZN1AC1Ev([[A_THIS:%.*]]) : (!cir.ptr<!rec_A>) -> ()
+// CHECK: cir.call @_ZN1AC1Ev([[A_THIS:%.*]]) {cxx_ctor = #cir.cxx_ctor<"struct A">} : (!cir.ptr<!rec_A>) -> ()
 // CHECK: cir.call @_ZN1A3fooEv([[A_THIS]]) : (!cir.ptr<!rec_A>) -> !s32i
 // CHECK: cir.call @_ZN1A3barEv([[A_THIS]]) : (!cir.ptr<!rec_A>) -> !s32i
 

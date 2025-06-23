@@ -16,7 +16,7 @@ void f1() {
 // CIR: cir.func dso_local @_Z2f1v()
 // CIR:     %0 = cir.alloca !rec_B, !cir.ptr<!rec_B>, ["v", init]
 // CIR:     %1 = cir.base_class_addr %0 : !cir.ptr<!rec_B> nonnull [0] -> !cir.ptr<!rec_A1>
-// CIR:     cir.call @_ZN2A1C2Ev(%1) : (!cir.ptr<!rec_A1>) -> ()
+// CIR:     cir.call @_ZN2A1C2Ev(%1) {cxx_ctor = #cir.cxx_ctor<"struct A1">} : (!cir.ptr<!rec_A1>) -> ()
 // CIR:     cir.return
 // LLVM: define dso_local void @_Z2f1v()
 // LLVM:    %1 = alloca %class.B, i64 1, align 1
@@ -35,9 +35,9 @@ void f2() {
 // CIR: cir.func dso_local @_Z2f2v()
 // CIR:     %0 = cir.alloca !rec_C, !cir.ptr<!rec_C>, ["v", init]
 // CIR:     %1 = cir.base_class_addr %0 : !cir.ptr<!rec_C> nonnull [0] -> !cir.ptr<!rec_A1>
-// CIR:     cir.call @_ZN2A1C2Ev(%1) : (!cir.ptr<!rec_A1>) -> ()
+// CIR:     cir.call @_ZN2A1C2Ev(%1) {cxx_ctor = #cir.cxx_ctor<"struct A1">} : (!cir.ptr<!rec_A1>) -> ()
 // CIR:     %2 = cir.base_class_addr %0 : !cir.ptr<!rec_C> nonnull [0] -> !cir.ptr<!rec_A2>
-// CIR:     cir.call @_ZN2A2C2Ev(%2) : (!cir.ptr<!rec_A2>) -> ()
+// CIR:     cir.call @_ZN2A2C2Ev(%2) {cxx_ctor = #cir.cxx_ctor<"struct A2">} : (!cir.ptr<!rec_A2>) -> ()
 // CIR:     cir.return
 // LLVM: define dso_local void @_Z2f2v()
 // LLVM:    %1 = alloca %class.C, i64 1, align 1
@@ -58,8 +58,8 @@ void f3() {
 // CIR: cir.func dso_local @_Z2f3v()
 // CIR:     %0 = cir.alloca !rec_D, !cir.ptr<!rec_D>, ["v", init]
 // CIR:     %1 = cir.base_class_addr %0 : !cir.ptr<!rec_D> nonnull [0] -> !cir.ptr<!rec_A3>
-// CIR:     cir.call @_ZN2A3C2Ev(%1) : (!cir.ptr<!rec_A3>) -> ()
-// CIR:     cir.call @_ZN1DD1Ev(%0) : (!cir.ptr<!rec_D>) -> ()
+// CIR:     cir.call @_ZN2A3C2Ev(%1) {cxx_ctor = #cir.cxx_ctor<"struct A3">} : (!cir.ptr<!rec_A3>) -> ()
+// CIR:     cir.call @_ZN1DD1Ev(%0) {cxx_dtor = #cir.cxx_dtor<"class D">} : (!cir.ptr<!rec_D>) -> ()
 // CIR:     cir.return
 // LLVM: define dso_local void @_Z2f3v()
 // LLVM:    %1 = alloca %class.D, i64 1, align 1

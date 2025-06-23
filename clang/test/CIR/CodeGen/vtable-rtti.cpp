@@ -44,7 +44,7 @@ public:
 // CHECK:   cir.store{{.*}} %arg0, %0 : !cir.ptr<![[ClassB]]>, !cir.ptr<!cir.ptr<![[ClassB]]>>
 // CHECK:   %1 = cir.load %0 : !cir.ptr<!cir.ptr<![[ClassB]]>>, !cir.ptr<![[ClassB]]>
 // CHECK:   %2 = cir.base_class_addr %1 : !cir.ptr<![[ClassB]]> nonnull [0] -> !cir.ptr<![[ClassA]]>
-// CHECK:   cir.call @_ZN1AC2Ev(%2) : (!cir.ptr<![[ClassA]]>) -> ()
+// CHECK:   cir.call @_ZN1AC2Ev(%2) {cxx_ctor = #cir.cxx_ctor<"class A">} : (!cir.ptr<![[ClassA]]>) -> ()
 // CHECK:   %3 = cir.vtable.address_point(@_ZTV1B, address_point = <index = 0, offset = 2>) : !cir.ptr<!cir.ptr<!cir.func<() -> !u32i>>>
 // CHECK:   %4 = cir.cast(bitcast, %1 : !cir.ptr<![[ClassB]]>), !cir.ptr<!cir.ptr<!cir.ptr<!cir.func<() -> !u32i>>>>
 // CHECK:   cir.store{{.*}} %3, %4 : !cir.ptr<!cir.ptr<!cir.func<() -> !u32i>>>, !cir.ptr<!cir.ptr<!cir.ptr<!cir.func<() -> !u32i>>>>
@@ -58,7 +58,7 @@ public:
 // CHECK:     %0 = cir.alloca !rec_B, !cir.ptr<!rec_B>, ["agg.tmp.ensured"] {alignment = 8 : i64}
 // CHECK:     %1 = cir.const #cir.zero : ![[ClassB]]
 // CHECK:     cir.store{{.*}} %1, %0 : ![[ClassB]], !cir.ptr<![[ClassB]]>
-// CHECK:     cir.call @_ZN1BC2Ev(%0) : (!cir.ptr<![[ClassB]]>) -> ()
+// CHECK:     cir.call @_ZN1BC2Ev(%0) {cxx_ctor = #cir.cxx_ctor<"class B">} : (!cir.ptr<![[ClassB]]>) -> ()
 // CHECK:   }
 // CHECK:   cir.return
 // CHECK: }

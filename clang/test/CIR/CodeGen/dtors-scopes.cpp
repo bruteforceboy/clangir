@@ -18,8 +18,8 @@ void dtor1() {
 // CHECK: cir.func dso_local @_Z5dtor1v()
 // CHECK:   cir.scope {
 // CHECK:     %4 = cir.alloca !rec_C, !cir.ptr<!rec_C>, ["c", init] {alignment = 1 : i64}
-// CHECK:     cir.call @_ZN1CC2Ev(%4) : (!cir.ptr<!rec_C>) -> ()
-// CHECK:     cir.call @_ZN1CD2Ev(%4) : (!cir.ptr<!rec_C>) -> ()
+// CHECK:     cir.call @_ZN1CC2Ev(%4) {cxx_ctor = #cir.cxx_ctor<"struct C">} : (!cir.ptr<!rec_C>) -> ()
+// CHECK:     cir.call @_ZN1CD2Ev(%4) {cxx_dtor = #cir.cxx_dtor<"struct C">} : (!cir.ptr<!rec_C>) -> ()
 // CHECK:   }
 
 // DTOR_BODY: cir.func linkonce_odr @_ZN1CD2Ev{{.*}}{

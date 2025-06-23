@@ -16,5 +16,5 @@ void f() {
 // CHECK: cir.func dso_local @_Z1fv()
 // CHECK:     %0 = cir.alloca !rec_Zero, !cir.ptr<!rec_Zero>, ["z0", init]
 // CHECK:     %1 = cir.alloca !rec_Zero, !cir.ptr<!rec_Zero>, ["z1"]
-// CHECK:     cir.call @_ZN4ZeroC1Ev(%0) : (!cir.ptr<!rec_Zero>) -> ()
+// CHECK:     cir.call @_ZN4ZeroC1Ev(%0) {cxx_ctor = #cir.cxx_ctor<"struct Zero">} : (!cir.ptr<!rec_Zero>) -> ()
 // CHECK:     cir.return

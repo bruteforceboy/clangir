@@ -29,8 +29,8 @@ void yo() {
 // CIR: cir.scope {
 // CIR:   %[[VADDR:.*]] = cir.alloca ![[VecTy]], !cir.ptr<![[VecTy]]>, ["v", init]
 // CIR:   cir.try {
-// CIR:     cir.call exception @_ZN3VecC1Ev(%[[VADDR]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:     cir.call @_ZN3VecD1Ev(%[[VADDR]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call exception @_ZN3VecC1Ev(%[[VADDR]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call @_ZN3VecD1Ev(%[[VADDR]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR:     cir.yield
 // CIR:   } catch [type #cir.all {
 // CIR:     cir.catch_param -> !cir.ptr<!void>
@@ -116,7 +116,7 @@ void yo2() {
 // CIR_FLAT:    cir.br ^[[CATCH_BEGIN:.*]](%exception_ptr : !cir.ptr<!void>)
 // CIR_FLAT:  ^[[PAD_DTOR]]:
 // CIR_FLAT:    %exception_ptr_0, %type_id_1 = cir.eh.inflight_exception
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[vec]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[vec]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR_FLAT:    cir.br ^[[CATCH_BEGIN]](%exception_ptr_0 : !cir.ptr<!void>)
 // CIR_FLAT:  ^[[CATCH_BEGIN]](
 // CIR_FLAT:    cir.catch_param begin
@@ -141,26 +141,26 @@ void yo3(bool x) {
 // CIR:   %[[V3:.*]] = cir.alloca ![[VecTy]], !cir.ptr<![[VecTy]]>, ["v3"
 // CIR:   %[[V4:.*]] = cir.alloca ![[VecTy]], !cir.ptr<![[VecTy]]>, ["v4"
 // CIR:   cir.try {
-// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V2]]) : (!cir.ptr<![[VecTy]]>) -> () cleanup {
-// CIR:       cir.call @_ZN3VecD1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V1]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V2]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> () cleanup {
+// CIR:       cir.call @_ZN3VecD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR:       cir.yield
 // CIR:     }
-// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V3]]) : (!cir.ptr<![[VecTy]]>) -> () cleanup {
-// CIR:       cir.call @_ZN3VecD1Ev(%[[V2]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:       cir.call @_ZN3VecD1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V3]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> () cleanup {
+// CIR:       cir.call @_ZN3VecD1Ev(%[[V2]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:       cir.call @_ZN3VecD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR:       cir.yield
 // CIR:     }
-// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V4]]) : (!cir.ptr<![[VecTy]]>) -> () cleanup {
-// CIR:       cir.call @_ZN3VecD1Ev(%[[V3]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:       cir.call @_ZN3VecD1Ev(%[[V2]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:       cir.call @_ZN3VecD1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V4]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> () cleanup {
+// CIR:       cir.call @_ZN3VecD1Ev(%[[V3]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:       cir.call @_ZN3VecD1Ev(%[[V2]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:       cir.call @_ZN3VecD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR:       cir.yield
 // CIR:     }
-// CIR:     cir.call @_ZN3VecD1Ev(%[[V4]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:     cir.call @_ZN3VecD1Ev(%[[V3]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:     cir.call @_ZN3VecD1Ev(%[[V2]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:     cir.call @_ZN3VecD1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call @_ZN3VecD1Ev(%[[V4]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call @_ZN3VecD1Ev(%[[V3]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call @_ZN3VecD1Ev(%[[V2]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call @_ZN3VecD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR:     cir.yield
 // CIR:   } catch [type #cir.all {
 // CIR:   }]
@@ -182,28 +182,28 @@ void yo3(bool x) {
 // CIR_FLAT:  ^[[CALL3]]:
 // CIR_FLAT:    cir.try_call @_ZN3VecC1Ev(%[[V4]]) ^[[NOTROW_CLEANUP:.*]], ^[[CLEANUP_V4:.*]] : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR_FLAT:  ^[[NOTROW_CLEANUP]]:
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V4]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V3]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V2]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V4]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V3]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V2]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR_FLAT:    cir.br ^[[AFTER_TRY:.*]] loc
 // CIR_FLAT:  ^[[CLEANUP_V1]]:
 // CIR_FLAT:    %exception_ptr, %type_id = cir.eh.inflight_exception
 // CIR_FLAT:    cir.br ^[[CATCH_BEGIN:.*]](%exception_ptr : !cir.ptr<!void>)
 // CIR_FLAT:  ^[[CLEANUP_V2]]:
 // CIR_FLAT:    %exception_ptr_0, %type_id_1 = cir.eh.inflight_exception
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR_FLAT:    cir.br ^[[CATCH_BEGIN]](%exception_ptr_0 : !cir.ptr<!void>)
 // CIR_FLAT:  ^[[CLEANUP_V3]]:
 // CIR_FLAT:    %exception_ptr_2, %type_id_3 = cir.eh.inflight_exception
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V2]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V2]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR_FLAT:    cir.br ^[[CATCH_BEGIN]](%exception_ptr_2 : !cir.ptr<!void>)
 // CIR_FLAT:  ^[[CLEANUP_V4]]:
 // CIR_FLAT:    %exception_ptr_4, %type_id_5 = cir.eh.inflight_exception
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V3]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V2]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V3]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V2]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR_FLAT:    cir.call @_ZN3VecD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR_FLAT:    cir.br ^[[CATCH_BEGIN]](%exception_ptr_4 : !cir.ptr<!void>)
 // CIR_FLAT:  ^[[CATCH_BEGIN]]({{.*}}
 // CIR_FLAT:    cir.catch_param begin
@@ -281,29 +281,29 @@ void yo2(bool x) {
 // CIR:   %[[V1:.*]] = cir.alloca ![[VecTy]], !cir.ptr<![[VecTy]]>, ["v1"
 // CIR:   %[[V2:.*]] = cir.alloca ![[VecTy]], !cir.ptr<![[VecTy]]>, ["v2"
 // CIR:   cir.try {
-// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V2]]) : (!cir.ptr<![[VecTy]]>) -> () cleanup {
-// CIR:       cir.call @_ZN3VecD1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V1]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call exception @_ZN3VecC1Ev(%[[V2]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> () cleanup {
+// CIR:       cir.call @_ZN3VecD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR:       cir.yield
 // CIR:     }
 // CIR:     cir.scope {
 // CIR:       %[[V3:.*]] = cir.alloca ![[VecTy]], !cir.ptr<![[VecTy]]>, ["v3"
 // CIR:       %[[V4:.*]] = cir.alloca ![[VecTy]], !cir.ptr<![[VecTy]]>, ["v4"
 // CIR:       cir.try {
-// CIR:         cir.call exception @_ZN3VecC1Ev(%[[V3]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:         cir.call exception @_ZN3VecC1Ev(%[[V4]]) : (!cir.ptr<![[VecTy]]>) -> () cleanup {
-// CIR:           cir.call @_ZN3VecD1Ev(%[[V3]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:         cir.call exception @_ZN3VecC1Ev(%[[V3]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:         cir.call exception @_ZN3VecC1Ev(%[[V4]]) {cxx_ctor = #cir.cxx_ctor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> () cleanup {
+// CIR:           cir.call @_ZN3VecD1Ev(%[[V3]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR:           cir.yield
 // CIR:         }
-// CIR:         cir.call @_ZN3VecD1Ev(%[[V4]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:         cir.call @_ZN3VecD1Ev(%[[V3]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:         cir.call @_ZN3VecD1Ev(%[[V4]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:         cir.call @_ZN3VecD1Ev(%[[V3]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR:         cir.yield
 // CIR:       } catch [type #cir.all {
 // CIR:         cir.catch_param -> !cir.ptr<!void>
 // CIR:       }]
 // CIR:     }
-// CIR:     cir.call @_ZN3VecD1Ev(%[[V2]]) : (!cir.ptr<![[VecTy]]>) -> ()
-// CIR:     cir.call @_ZN3VecD1Ev(%[[V1]]) : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call @_ZN3VecD1Ev(%[[V2]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
+// CIR:     cir.call @_ZN3VecD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"struct Vec">} : (!cir.ptr<![[VecTy]]>) -> ()
 // CIR:     cir.yield
 // CIR:   } catch [type #cir.all {
 // CIR:     cir.catch_param -> !cir.ptr<!void>
@@ -326,7 +326,7 @@ void bar() {
 // CIR:  %[[V1:.*]] = cir.alloca !s32i, !cir.ptr<!s32i>, ["b", init] {alignment = 4 : i64}
 // CIR:  %[[V2:.*]] = cir.call @_Z3foov() : () -> !s32i
 // CIR:  cir.store align(4) %[[V2]], %[[V1]] : !s32i, !cir.ptr<!s32i>
-// CIR:  cir.call @_ZN1AD2Ev(%[[V0]]) : (!cir.ptr<!rec_A>) -> ()
+// CIR:  cir.call @_ZN1AD2Ev(%[[V0]]) {cxx_dtor = #cir.cxx_dtor<"struct A">} : (!cir.ptr<!rec_A>) -> ()
 // CIR:  cir.return
 
 // LLVM: ; Function Attrs: noinline nounwind optnone
@@ -354,21 +354,21 @@ void d() {
 // CIR: %[[V1:.*]] = cir.alloca !rec_C, !cir.ptr<!rec_C>, ["b"] {alignment = 1 : i64}
 // CIR: cir.scope {
 // CIR:   %[[V2:.*]] = cir.alloca !rec_C, !cir.ptr<!rec_C>, ["agg.tmp0"] {alignment = 1 : i64}
-// CIR:   cir.call @_ZN1CC2ERKS_(%[[V2]], %[[V1]]) : (!cir.ptr<!rec_C>, !cir.ptr<!rec_C>) -> () extra(#fn_attr)
+// CIR:   cir.call @_ZN1CC2ERKS_(%[[V2]], %[[V1]]) {cxx_ctor = #cir.cxx_ctor<"class C">} : (!cir.ptr<!rec_C>, !cir.ptr<!rec_C>) -> () extra(#fn_attr)
 // CIR:   %[[V3:.*]] = cir.load{{.*}} %[[V2]] : !cir.ptr<!rec_C>, !rec_C
 // CIR:   cir.try synthetic cleanup {
 // CIR:     cir.call exception @_ZN1CaSES_(%[[V0]], %[[V3]]) : (!cir.ptr<!rec_C>, !rec_C) -> () cleanup {
-// CIR:       cir.call @_ZN1CD1Ev(%[[V2]]) : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
-// CIR:       cir.call @_ZN1CD1Ev(%[[V1]]) : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
+// CIR:       cir.call @_ZN1CD1Ev(%[[V2]]) {cxx_dtor = #cir.cxx_dtor<"class C">} : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
+// CIR:       cir.call @_ZN1CD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"class C">} : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
 // CIR:       cir.yield
 // CIR:     }
 // CIR:     cir.yield
 // CIR:   } catch [#cir.unwind {
 // CIR:     cir.resume
 // CIR:   }]
-// CIR:   cir.call @_ZN1CD1Ev(%[[V2]]) : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
-// CIR:   cir.call @_ZN1CD1Ev(%[[V1]]) : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
+// CIR:   cir.call @_ZN1CD1Ev(%[[V2]]) {cxx_dtor = #cir.cxx_dtor<"class C">} : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
+// CIR:   cir.call @_ZN1CD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"class C">} : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
 // CIR: }
-// CIR: cir.call @_ZN1CD1Ev(%[[V1]]) : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
-// CIR: cir.call @_ZN1CD1Ev(%[[V0]]) : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
+// CIR: cir.call @_ZN1CD1Ev(%[[V1]]) {cxx_dtor = #cir.cxx_dtor<"class C">} : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
+// CIR: cir.call @_ZN1CD1Ev(%[[V0]]) {cxx_dtor = #cir.cxx_dtor<"class C">} : (!cir.ptr<!rec_C>) -> () extra(#fn_attr)
 // CIR: cir.return
