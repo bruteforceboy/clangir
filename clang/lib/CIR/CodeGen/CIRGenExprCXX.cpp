@@ -1575,12 +1575,12 @@ RValue CIRGenFunction::emitCXXDestructorCall(GlobalDecl Dtor,
 
   auto cxxDtor = cir::CXXDtorAttr::get(
       &getMLIRContext(),
-      getContext().getRecordType(DtorDecl->getParent()).getAsString());
+      convertType(getContext().getRecordType(DtorDecl->getParent())));
   return emitCall(CGM.getTypes().arrangeCXXStructorDeclaration(Dtor), Callee,
                   ReturnValueSlot(), Args, nullptr, CE && CE == MustTailCall,
                   CE ? getLoc(CE->getExprLoc())
                      : getLoc(Dtor.getDecl()->getSourceRange()),
-                  {}, {}, cxxDtor);
+                  {}, {cxxDtor});
 }
 
 /// Emit a call to an operator new or operator delete function, as implicitly

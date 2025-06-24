@@ -1300,38 +1300,54 @@ def GlobalDtorAttr : CIR_GlobalCtorDtor<"Dtor", "dtor",
   "A function with this attribute excutes before module unloading"
 >;
 
-class CIR_CXXCtorDtor<string name, string attrMnemonic, string sum, string desc>
-    : CIR_Attr<name, attrMnemonic> {
+class CIR_CXXSpecialMember<string name, string attrMnemonic, string sum,
+                           string desc> : CIR_Attr<name, attrMnemonic> {
   let summary = sum;
   let description = desc;
-
-  let parameters = (ins "mlir::StringAttr":$name);
-  let assemblyFormat = [{
-    `<`
-      $name
-    `>`
-  }];
-  let builders = [
-    AttrBuilder<(ins "llvm::StringRef":$name), [{
-      return $_get($_ctxt, mlir::StringAttr::get($_ctxt, name));
-    }]>,
-    AttrBuilderWithInferredContext<(ins "mlir::StringAttr":$name),
-    [{
-      return $_get(name.getContext(), name);
-    }]>
-  ];
   let skipDefaultBuilders = 1;
 }
 
 def CXXCtorAttr
-    : CIR_CXXCtorDtor<"CXXCtor", "cxx_ctor",
-                      "Marks a function as a CXX constructor",
-                      "Functions with this attribute are CXX constructors">;
+    : CIR_CXXSpecialMember<
+          "CXXCtor", "cxx_ctor", "Marks a function as a CXX constructor",
+          "Functions with this attribute are CXX constructors"> {
+  let parameters = (ins "mlir::Type":$type,
+                        "bool":$is_default_constructor,
+                        "bool":$is_copy_constructor);
+  let builders =
+    [AttrBuilder<(ins "mlir::Type":$type,
+                      "bool":$is_default_constructor,
+                      "bool":$is_copy_constructor), [{
+      return $_get($_ctxt, type, is_default_constructor,
+                    is_copy_constructor);
+    }]>,
+    AttrBuilderWithInferredContext<(ins "mlir::Type":$type,
+                                        "bool":$is_default_constructor,
+                                        "bool":$is_copy_constructor), [{
+      return $_get(type.getContext(), type,
+                    is_default_constructor, is_copy_constructor);
+    }]>];
+  let hasCustomAssemblyFormat = 1;
+}
 
 def CXXDtorAttr
-    : CIR_CXXCtorDtor<"CXXDtor", "cxx_dtor",
-                      "Marks a function as a CXX destructor",
-                      "Functions with this attribute are CXX destructors">;
+    : CIR_CXXSpecialMember<
+          "CXXDtor", "cxx_dtor", "Marks a function as a CXX destructor",
+          "Functions with this attribute are CXX destructors"> {
+  let parameters = (ins "mlir::Type":$type);
+  let assemblyFormat = [{
+    `<`
+      $type
+    `>`
+  }];
+  let builders =
+    [AttrBuilder<(ins "mlir::Type":$type), [{
+      return $_get($_ctxt, type);
+    }]>,
+    AttrBuilderWithInferredContext<(ins "mlir::Type":$type), [{
+      return $_get(type.getContext(), type);
+    }]>];
+}
 
 def BitfieldInfoAttr : CIR_Attr<"BitfieldInfo", "bitfield_info"> {
   let summary = "Represents a bit field info";

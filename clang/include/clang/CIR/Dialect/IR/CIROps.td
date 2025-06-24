@@ -3595,7 +3595,9 @@ def FuncOp : CIR_Op<"func", [
     OptionalAttr<GlobalCtorAttr>:$global_ctor,
     OptionalAttr<GlobalDtorAttr>:$global_dtor,
     OptionalAttr<ArrayAttr>:$annotations,
-    OptionalAttr<AnyASTFunctionDeclAttr>:$ast
+    OptionalAttr<AnyASTFunctionDeclAttr>:$ast,
+    OptionalAttr<CXXCtorAttr>:$cxx_ctor,
+    OptionalAttr<CXXDtorAttr>:$cxx_dtor
   );
 
   let regions = (region AnyRegion:$body);
@@ -3855,7 +3857,9 @@ class CIR_CallOp<string mnemonic, list<Trait> extra_traits = []> :
     DefaultValuedAttr<CIR_CallingConv, "CallingConv::C">:$calling_conv,
     DefaultValuedAttr<CIR_SideEffect, "SideEffect::All">:$side_effect,
     ExtraFuncAttr:$extra_attrs,
-    OptionalAttr<ASTCallExprInterface>:$ast
+    OptionalAttr<ASTCallExprInterface>:$ast,
+    OptionalAttr<CXXCtorAttr>:$cxx_ctor,
+    OptionalAttr<CXXDtorAttr>:$cxx_dtor
   );
 }
 

@@ -599,6 +599,19 @@ AddressSpaceAttr::getValueFromLangAS(clang::LangAS langAS) {
   }
 }
 
+Attribute CXXCtorAttr::parse(AsmParser &parser, Type odsType) {}
+
+void CXXCtorAttr::print(AsmPrinter &printer) const {
+  printer << '<' << getType();
+
+  if (getIsDefaultConstructor())
+    printer << ", default_ctor";
+  if (getIsCopyConstructor())
+    printer << ", copy_ctor";
+
+  printer << '>';
+}
+
 //===----------------------------------------------------------------------===//
 // CIR Dialect
 //===----------------------------------------------------------------------===//

@@ -2014,9 +2014,10 @@ void CIRGenFunction::emitCXXConstructorCall(
   cir::CIRCallOpInterface C;
 
   auto cxxCtor = cir::CXXCtorAttr::get(
-      &getMLIRContext(), getContext().getRecordType(ClassDecl).getAsString());
+      &getMLIRContext(), convertType(getContext().getRecordType(ClassDecl)),
+      D->isDefaultConstructor(), D->isCopyConstructor());
   emitCall(Info, Callee, ReturnValueSlot(), Args, &C, false, getLoc(Loc), {},
-           cxxCtor, {});
+           {cxxCtor});
 
   assert(CGM.getCodeGenOpts().OptimizationLevel == 0 ||
          ClassDecl->isDynamicClass() || Type == Ctor_Base ||
