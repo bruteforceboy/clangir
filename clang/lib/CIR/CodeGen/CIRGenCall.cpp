@@ -424,7 +424,8 @@ RValue CIRGenFunction::emitCall(const CIRGenFunctionInfo &CallInfo,
                                 const CallArgList &CallArgs,
                                 cir::CIRCallOpInterface *callOrTryCall,
                                 bool IsMustTail, mlir::Location loc,
-                                std::optional<const clang::CallExpr *> E) {
+                                std::optional<const clang::CallExpr *> E,
+                                std::optional<const clang::RecordDecl *> RD) {
   auto builder = CGM.getBuilder();
   // FIXME: We no longer need the types from CallArgs; lift up and simplify
 
@@ -652,6 +653,10 @@ RValue CIRGenFunction::emitCall(const CIRGenFunctionInfo &CallInfo,
     if (E)
       callLikeOp->setAttr("ast",
                           cir::ASTCallExprAttr::get(&getMLIRContext(), *E));
+
+    if (RD)
+      callLikeOp->setAttr("ast_record",
+                          cir::ASTRecordDeclAttr::get(&getMLIRContext(), *RD));
 
     if (callOrTryCall)
       *callOrTryCall = callLikeOp;

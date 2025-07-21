@@ -42,28 +42,66 @@ private:
   template <size_t... Indices>
   static TargetOp buildCall(CIRBaseBuilderTy &builder, CallOp call,
                             std::index_sequence<Indices...>) {
-    return builder.create<TargetOp>(call.getLoc(), call.getResult().getType(),
-                                    call.getCalleeAttr(),
-                                    call.getOperand(Indices)...);
+    return builder.create<TargetOp>(
+        call.getLoc(),
+        (call.getResult() ? call.getResult().getType() : mlir::TypeRange{}),
+        call.getCalleeAttr(), call.getOperand(Indices)...);
   }
 
 public:
-  static bool raise(CallOp call, mlir::MLIRContext &context, bool remark) {
+  static FuncOp getCalleeFromSymbol(mlir::ModuleOp theModule,
+                                    llvm::StringRef name) {
+    auto global = mlir::SymbolTable::lookupSymbolIn(theModule, name);
+    assert(global && "expected to find symbol for function");
+    return dyn_cast<FuncOp>(global);
+  }
+
+  static bool isStdVector(const clang::CXXRecordDecl *RD) {
+    if (!RD || !RD->getDeclContext()->isStdNamespace())
+      return false;
+
+    if (RD->getDeclName().isIdentifier()) {
+      StringRef Name = RD->getName();
+      return Name == "vector";
+    }
+
+    return false;
+  }
+
+  static bool raise(mlir::ModuleOp theModule, CallOp call,
+                    mlir::MLIRContext &context, bool remark) {
     constexpr int numArgs = TargetOp::getNumArgs();
     if (call.getNumOperands() != numArgs)
       return false;
 
-    auto callExprAttr = call.getAstAttr();
+    llvm::StringRef name = *call.getCallee();
+    auto calleeFunc = getCalleeFromSymbol(theModule, name);
+
     llvm::StringRef stdFuncName = TargetOp::getFunctionName();
-    if (!callExprAttr || !callExprAttr.isStdFunctionCall(stdFuncName))
-      return false;
 
-    if (!checkArguments(call.getArgOperands()))
-      return false;
+    if (auto specialMember = calleeFunc.getCxxSpecialMemberAttr()) {
+      auto matches =
+          (stdFuncName == "vector_ctor" && isa<CXXCtorAttr>(specialMember)) ||
+          (stdFuncName == "vector_dtor" && isa<CXXDtorAttr>(specialMember));
+      if (!matches)
+        return false;
 
-    if (remark)
-      mlir::emitRemark(call.getLoc())
-          << "found call to std::" << stdFuncName << "()";
+      auto recordDeclAttr = call.getAstRecordAttr();
+      if (!recordDeclAttr ||
+          !isStdVector(cast<clang::CXXRecordDecl>(recordDeclAttr.getRawDecl())))
+        return false;
+    } else {
+      auto callExprAttr = call.getAstAttr();
+      if (!callExprAttr || !callExprAttr.isStdFunctionCall(stdFuncName))
+        return false;
+
+      if (!checkArguments(call.getArgOperands()))
+        return false;
+
+      if (remark)
+        mlir::emitRemark(call.getLoc())
+            << "found call to std::" << stdFuncName << "()";
+    }
 
     CIRBaseBuilderTy builder(context);
     builder.setInsertionPointAfter(call.getOperation());
@@ -194,12 +232,16 @@ void IdiomRecognizerPass::recognizeCall(CallOp call) {
 
   bool remark = opts.emitRemarkFoundCalls();
 
-  using StdFunctionsRecognizer = std::tuple<StdRecognizer<StdFindOp>>;
+  using StdFunctionsRecognizer =
+      std::tuple<StdRecognizer<StdFindOp>, StdRecognizer<StdVectorCtorOp>,
+                 StdRecognizer<StdVectorDtorOp>>;
 
   // MSVC requires explicitly capturing these variables.
   std::apply(
       [&, call, remark, this](auto... recognizers) {
-        (decltype(recognizers)::raise(call, this->getContext(), remark) || ...);
+        (decltype(recognizers)::raise(theModule, call, this->getContext(),
+                                      remark) ||
+         ...);
       },
       StdFunctionsRecognizer());
 }
