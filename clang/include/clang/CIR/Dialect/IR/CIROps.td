@@ -3991,8 +3991,7 @@ class CIR_CallOp<string mnemonic, list<Trait> extra_traits = []>
     DefaultValuedAttr<CIR_CallingConv, "CallingConv::C">:$calling_conv,
     DefaultValuedAttr<CIR_SideEffect, "SideEffect::All">:$side_effect,
     CIR_ExtraFuncAttr:$extra_attrs,
-    OptionalAttr<ASTCallExprInterface>:$ast,
-    OptionalAttr<ASTRecordDeclInterface>:$ast_record
+    OptionalAttr<ASTCallExprInterface>:$ast
   );
 }
 

@@ -21,6 +21,7 @@
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Path.h"
 
@@ -56,16 +57,29 @@ public:
     return dyn_cast<FuncOp>(global);
   }
 
-  static bool isStdVector(const clang::CXXRecordDecl *RD) {
-    if (!RD || !RD->getDeclContext()->isStdNamespace())
-      return false;
+  static std::optional<StringRef>
+  getRecordName(const clang::CXXRecordDecl *rd) {
+    if (!rd || !rd->getDeclContext()->isStdNamespace())
+      return std::nullopt;
 
-    if (RD->getDeclName().isIdentifier()) {
-      StringRef Name = RD->getName();
-      return Name == "vector";
-    }
+    if (rd->getDeclName().isIdentifier())
+      return rd->getName();
 
-    return false;
+    return std::nullopt;
+  }
+
+  static std::optional<std::string>
+  resolveSpecialMember(mlir::Attribute specialMember) {
+    return TypeSwitch<Attribute, std::optional<std::string>>(specialMember)
+        .Case<CXXCtorAttr, CXXDtorAttr>(
+            [](auto attr) -> std::optional<std::string> {
+              if (!attr.getRecordDecl())
+                return std::nullopt;
+              if (auto recordName = getRecordName(*attr.getRecordDecl()))
+                return recordName->str() + "_" + attr.getMnemonic().str();
+              return std::nullopt;
+            })
+        .Default([](Attribute) { return std::nullopt; });
   }
 
   static bool raise(mlir::ModuleOp theModule, CallOp call,
@@ -74,21 +88,12 @@ public:
     if (call.getNumOperands() != numArgs)
       return false;
 
-    llvm::StringRef name = *call.getCallee();
-    auto calleeFunc = getCalleeFromSymbol(theModule, name);
-
     llvm::StringRef stdFuncName = TargetOp::getFunctionName();
+    auto calleeFunc = getCalleeFromSymbol(theModule, *call.getCallee());
 
     if (auto specialMember = calleeFunc.getCxxSpecialMemberAttr()) {
-      auto matches =
-          (stdFuncName == "vector_ctor" && isa<CXXCtorAttr>(specialMember)) ||
-          (stdFuncName == "vector_dtor" && isa<CXXDtorAttr>(specialMember));
-      if (!matches)
-        return false;
-
-      auto recordDeclAttr = call.getAstRecordAttr();
-      if (!recordDeclAttr ||
-          !isStdVector(cast<clang::CXXRecordDecl>(recordDeclAttr.getRawDecl())))
+      auto resolved = resolveSpecialMember(specialMember);
+      if (!resolved || *resolved != stdFuncName.str())
         return false;
     } else {
       auto callExprAttr = call.getAstAttr();
@@ -97,11 +102,11 @@ public:
 
       if (!checkArguments(call.getArgOperands()))
         return false;
-
-      if (remark)
-        mlir::emitRemark(call.getLoc())
-            << "found call to std::" << stdFuncName << "()";
     }
+
+    if (remark)
+      mlir::emitRemark(call.getLoc())
+          << "found call to std::" << stdFuncName << "()";
 
     CIRBaseBuilderTy builder(context);
     builder.setInsertionPointAfter(call.getOperation());

@@ -1575,8 +1575,7 @@ RValue CIRGenFunction::emitCXXDestructorCall(GlobalDecl Dtor,
   return emitCall(CGM.getTypes().arrangeCXXStructorDeclaration(Dtor), Callee,
                   ReturnValueSlot(), Args, nullptr, CE && CE == MustTailCall,
                   CE ? getLoc(CE->getExprLoc())
-                     : getLoc(Dtor.getDecl()->getSourceRange()),
-                  CE, DtorDecl->getParent());
+                     : getLoc(Dtor.getDecl()->getSourceRange()));
 }
 
 /// Emit a call to an operator new or operator delete function, as implicitly

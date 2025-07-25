@@ -61,10 +61,10 @@ def CIR_IterBeginOp: CIR_StdOp<"begin",
 def CIR_IterEndOp: CIR_StdOp<"end",
   (ins CIR_AnyType:$container),
   (outs CIR_AnyType:$result)>;
-def CIR_StdVectorCtorOp: CIR_StdOp<"vector_ctor",
+def CIR_StdVectorCtorOp: CIR_StdOp<"vector_cxx_ctor",
   (ins CIR_AnyType:$first),
   (outs Optional<CIR_AnyType>:$result)>;
-def CIR_StdVectorDtorOp: CIR_StdOp<"vector_dtor",
+def CIR_StdVectorDtorOp: CIR_StdOp<"vector_cxx_dtor",
   (ins CIR_AnyType:$first),
   (outs Optional<CIR_AnyType>:$result)>;
 

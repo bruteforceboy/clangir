@@ -1865,8 +1865,7 @@ public:
                   const CallArgList &Args,
                   cir::CIRCallOpInterface *callOrTryCall, bool IsMustTail,
                   mlir::Location loc,
-                  std::optional<const clang::CallExpr *> E = std::nullopt,
-                  std::optional<const clang::RecordDecl *> RD = std::nullopt);
+                  std::optional<const clang::CallExpr *> E = std::nullopt);
   RValue emitCall(const CIRGenFunctionInfo &CallInfo,
                   const CIRGenCallee &Callee, ReturnValueSlot ReturnValue,
                   const CallArgList &Args,
