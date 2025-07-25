@@ -47,3 +47,14 @@ void iter_test() {
   yolo::array<unsigned char, 3> v = {1, 2, 3};
   (void)v.begin(); // no remark should be produced.
 }
+
+void vector_test() {
+  std::vector<int> v; // expected-remark {{found call to std::vector_cxx_ctor()}}
+
+  // BEFORE-IDIOM: cir.call @_ZNSt6vectorIiEC1Ev(
+  // BEFORE-IDIOM: cir.call @_ZNSt6vectorIiED1Ev(
+  // AFTER-IDIOM: cir.std.vector_cxx_ctor(
+  // AFTER-IDIOM: cir.std.vector_cxx_dtor(
+  // AFTER-LOWERING-PREPARE: cir.call @_ZNSt6vectorIiEC1Ev(
+  // AFTER-LOWERING-PREPARE: cir.call @_ZNSt6vectorIiED1Ev(
+}

@@ -288,13 +288,13 @@ namespace std {
     typedef __vector_iterator<T, T *, T &> iterator;
     typedef __vector_iterator<T, const T *, const T &> const_iterator;
 
-    vector() : _start(0), _finish(0), _end_of_storage(0) {}
+    vector() : _start(0), _finish(0), _end_of_storage(0) {} // expected-remark {{found call to std::vector_cxx_ctor()}}
     template <typename InputIterator>
     vector(InputIterator first, InputIterator last);
     vector(const vector &other);
     vector(vector &&other);
     explicit vector(size_type count);
-    ~vector();
+    ~vector(); // expected-remark{{found call to std::vector_cxx_dtor()}}
 
     size_t size() const {
       return size_t(_finish - _start);
