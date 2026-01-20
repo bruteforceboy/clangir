@@ -668,6 +668,28 @@ static void eraseEmptyAndUnusedBlocks(cir::FuncOp fnOp) {
     b->erase();
 }
 
+static void insertTrapInUnreachableBlocks(mlir::OpBuilder &builder,
+                                          cir::FuncOp fnOp) {
+  // Insert a TrapOp as a terminator into leftover blocks that are unreachable
+  // and have no terminator.
+  mlir::Block *entryBb = &fnOp.getBlocks().front();
+
+  SmallVector<mlir::Block *> blocksToTrap;
+  for (auto &blk : fnOp.getBlocks()) {
+    if (&blk == entryBb)
+      continue;
+    if (blk.mightHaveTerminator() || !blk.hasNoPredecessors() ||
+        !blk.hasNoSuccessors())
+      continue;
+    blocksToTrap.push_back(&blk);
+  }
+
+  for (auto *b : blocksToTrap) {
+    builder.setInsertionPointToEnd(b);
+    TrapOp::create(builder, fnOp.getLoc());
+  }
+}
+
 static bool isInterposable(cir::FuncOp fn) {
   if (isInterposableLinkage(fn.getLinkage()))
     return true;
@@ -865,6 +887,7 @@ cir::FuncOp CIRGenFunction::generateCode(clang::GlobalDecl gd, cir::FuncOp fn,
   }
 
   eraseEmptyAndUnusedBlocks(fn);
+  insertTrapInUnreachableBlocks(builder, fn);
   return fn;
 }
 
