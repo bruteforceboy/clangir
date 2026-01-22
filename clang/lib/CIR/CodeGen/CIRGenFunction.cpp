@@ -670,8 +670,11 @@ static void eraseEmptyAndUnusedBlocks(cir::FuncOp fnOp) {
 
 static void insertTrapInUnreachableBlocks(mlir::OpBuilder &builder,
                                           cir::FuncOp fnOp) {
-  // Insert a TrapOp as a terminator into leftover blocks that are unreachable
-  // and have no terminator.
+  // Insert a TrapOp as a terminator into unreachable blocks that have no
+  // terminator.
+  // FIXME(cir): This is a defensive workaround. Once the handling of
+  // unreachable code and clearing insertion points during cleanup is finalised,
+  // we should probably remove this insertion.
   mlir::Block *entryBb = &fnOp.getBlocks().front();
 
   SmallVector<mlir::Block *> blocksToTrap;
