@@ -432,6 +432,8 @@ void CIRGenFunction::LexicalScope::cleanup() {
   auto *currBlock = builder.getBlock();
   if (isGlobalInit() && !currBlock)
     return;
+  if (!currBlock)
+    return;
   if (currBlock->mightHaveTerminator() && currBlock->getTerminator())
     return;
 
@@ -876,7 +878,7 @@ cir::FuncOp CIRGenFunction::generateCode(clang::GlobalDecl gd, cir::FuncOp fn,
       llvm_unreachable("no definition for emitted function");
     }
 
-    assert(builder.getInsertionBlock() && "Should be valid");
+    //    assert(builder.getInsertionBlock() && "Should be valid");
 
     if (mlir::failed(fn.verifyBody()))
       return nullptr;
@@ -1405,9 +1407,8 @@ void CIRGenFunction::StartFunction(GlobalDecl gd, QualType retTy,
     }
     assert(builder.getInsertionBlock() && "Should be valid");
 
-    auto fnEndLoc = (fd && fd->getBody())
-                        ? getLoc(fd->getBody()->getEndLoc())
-                        : getLoc(Loc);
+    auto fnEndLoc = (fd && fd->getBody()) ? getLoc(fd->getBody()->getEndLoc())
+                                          : getLoc(Loc);
 
     // When the current function is not void, create an address to store the
     // result value.

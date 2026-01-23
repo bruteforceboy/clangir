@@ -280,7 +280,10 @@ void CIRGenFunction::emitAutoVarInit(const AutoVarEmission &emission) {
 
   // TODO: in LLVM codegen if we are at an unreachable point, the initializer
   // isn't emitted unless it contains a label. What we want for CIR?
-  assert(builder.getInsertionBlock());
+  if (!builder.getInsertionBlock()) {
+    // TODO(cir): If there are labels then we should continue
+    return;
+  }
 
   // Initialize the variable here if it doesn't have a initializer and it is a
   // C struct that is non-trivial to initialize or an array containing such a
@@ -377,6 +380,10 @@ void CIRGenFunction::emitAutoVarCleanups(const AutoVarEmission &emission) {
 
   // TODO: in LLVM codegen if we are at an unreachable point codgen
   // is ignored. What we want for CIR?
+  if (!builder.getInsertionBlock()) {
+    return;
+  }
+
   assert(builder.getInsertionBlock());
   const VarDecl &D = *emission.Variable;
 

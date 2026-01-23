@@ -20,6 +20,7 @@
 
 #include "CIRGenCleanup.h"
 #include "CIRGenFunction.h"
+#include "mlir/IR/Builders.h"
 
 using namespace clang;
 using namespace clang::CIRGen;
@@ -53,7 +54,7 @@ cir::BrOp CIRGenFunction::emitBranchThroughCleanup(mlir::Location Loc,
   // scope, we don't need to worry about fixups.
   if (TopCleanup == EHStack.stable_end() ||
       TopCleanup.encloses(Dest.getScopeDepth())) { // works for invalid
-    // FIXME(cir): should we clear insertion point here?
+    builder.clearInsertionPoint();
     return brOp;
   }
 
@@ -65,7 +66,7 @@ cir::BrOp CIRGenFunction::emitBranchThroughCleanup(mlir::Location Loc,
     Fixup.destinationIndex = Dest.getDestIndex();
     Fixup.initialBranch = brOp;
     Fixup.optimisticBranchBlock = nullptr;
-    // FIXME(cir): should we clear insertion point here?
+    builder.clearInsertionPoint();
     return brOp;
   }
 
@@ -96,6 +97,8 @@ cir::BrOp CIRGenFunction::emitBranchThroughCleanup(mlir::Location Loc,
         break;
     }
   }
+
+  // builder.clearInsertionPoint();
   return brOp;
 }
 

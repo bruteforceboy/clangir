@@ -44,6 +44,8 @@ Address CIRGenFunction::emitCompoundStmtWithoutScope(const CompoundStmt &S,
           llvm_unreachable("Unknown value statement");
       }
 
+      llvm::outs() << "we should ensure the insertion point\n";
+
       const Expr *E = cast<Expr>(ExprResult);
       QualType exprTy = E->getType();
       if (hasAggregateEvaluationKind(exprTy)) {
@@ -99,6 +101,34 @@ mlir::LogicalResult CIRGenFunction::emitStmt(const Stmt *S,
                                              ArrayRef<const Attr *> Attrs) {
   if (mlir::succeeded(emitSimpleStmt(S, useCurrentScope)))
     return mlir::success();
+
+  if (!HaveInsertPoint()) {
+    // If so, and the statement doesn't contain a label, then we do not need to
+    // generate actual code. This is safe because (1) the current point is
+    // unreachable, so we don't need to execute the code, and (2) we've already
+    // handled the statements which update internal data structures (like the
+    // local variable map) which could be used by subsequent statements.
+
+    // TODO(cir): check for labels
+    // Otherwise, make a new block to hold the code.
+
+    auto fn = dyn_cast<cir::FuncOp>(CurFn);
+    auto lastBb = &fn.getBody().getBlocks().back();
+
+    CurFn->dump();
+    auto *reg = CurFn->getBlock()->getParent();
+    if (lastBb->empty()) {
+      llvm::outs() << "setting the insertion point to the last block\n";
+      builder.setInsertionPointToEnd(lastBb);
+    } else {
+      llvm::outs() << "curFn before:\n";
+      CurFn->dump();
+      builder.createBlock(CurFn->getBlock()->getParent());
+      llvm::outs() << "curFn after:\n";
+      CurFn->dump();
+    }
+    assert(builder.getInsertionBlock());
+  }
 
   if (getContext().getLangOpts().OpenMP &&
       getContext().getLangOpts().OpenMPSimd)
@@ -497,9 +527,8 @@ mlir::LogicalResult CIRGenFunction::emitIfStmt(const IfStmt &S) {
 }
 
 mlir::LogicalResult CIRGenFunction::emitDeclStmt(const DeclStmt &S) {
-  if (!builder.getInsertionBlock()) {
-    CGM.emitError("Seems like this is unreachable code, what should we do?");
-    return mlir::failure();
+  if (builder.getInsertionBlock()) {
+    // EmitStopPoint(&S);
   }
 
   for (const auto *I : S.decls()) {
@@ -613,10 +642,11 @@ mlir::LogicalResult CIRGenFunction::emitReturnStmt(const ReturnStmt &S) {
   // should try to match traditional codegen more closely (to the extend which
   // is possible).
   auto *retBlock = currLexScope->getOrCreateRetBlock(*this, loc);
+  llvm::outs() << "branching through cleanup\n";
   emitBranchThroughCleanup(loc, returnBlock(retBlock));
 
   // Insert the new block to continue codegen after branch to ret block.
-  builder.createBlock(builder.getBlock()->getParent());
+  //  builder.createBlock(builder.getBlock()->getParent());
   return mlir::success();
 }
 
@@ -686,8 +716,7 @@ CIRGenFunction::emitContinueStmt(const clang::ContinueStmt &S) {
   return mlir::success();
 }
 
-mlir::LogicalResult
-CIRGenFunction::emitBreakStmt(const clang::BreakStmt &S) {
+mlir::LogicalResult CIRGenFunction::emitBreakStmt(const clang::BreakStmt &S) {
   builder.createBreak(getLoc(S.getBeginLoc()));
 
   // Insert the new block to continue codegen after the break statement.
